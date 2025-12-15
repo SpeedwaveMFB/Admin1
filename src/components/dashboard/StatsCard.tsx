@@ -29,16 +29,38 @@ export default function StatsCard({
   };
 
   return (
-    <Card elevation={2}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {title}
-            </Typography>
-            <Typography variant="h4" fontWeight={700} sx={{ color, mb: 1 }}>
-              {formattedValue()}
-            </Typography>
+    <Card
+      elevation={2}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            height: '100%',
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {title}
+              </Typography>
+              <Typography variant="h4" fontWeight={700} sx={{ color, mb: subtitle ? 1 : 0 }}>
+                {formattedValue()}
+              </Typography>
+            </Box>
             {subtitle && (
               <Typography variant="body2" color="text.secondary">
                 {subtitle}
@@ -56,6 +78,7 @@ export default function StatsCard({
                 alignItems: 'center',
                 justifyContent: 'center',
                 color,
+                ml: 2,
               }}
             >
               {icon}
