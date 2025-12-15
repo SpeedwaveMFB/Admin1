@@ -1,6 +1,13 @@
 import apiClient from './client';
 import { ApiResponse } from '@/types/api';
-import { Transaction, TransactionFilters, TransactionStats } from '@/types/transaction';
+import {
+  Transaction,
+  TransactionFilters,
+  TransactionStats,
+  BillTransaction,
+  BillFilters,
+  BillStats,
+} from '@/types/transaction';
 
 interface TransactionsResponse {
   transactions: Transaction[];
@@ -36,6 +43,88 @@ export const transactionsApi = {
     const response = await apiClient.get<ApiResponse<TransactionStats>>(
       '/admin/transactions/stats'
     );
+    return response.data;
+  },
+
+  getAirtimeBills: async (filters: BillFilters) => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        transactions: BillTransaction[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          itemsPerPage: number;
+          hasNextPage?: boolean;
+          hasPrevPage?: boolean;
+        };
+      }>
+    >('/admin/bills/airtime', {
+      params: filters,
+    });
+    return response.data;
+  },
+
+  getDataBills: async (filters: BillFilters) => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        transactions: BillTransaction[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          itemsPerPage: number;
+          hasNextPage?: boolean;
+          hasPrevPage?: boolean;
+        };
+      }>
+    >('/admin/bills/data', {
+      params: filters,
+    });
+    return response.data;
+  },
+
+  getElectricityBills: async (filters: BillFilters) => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        transactions: BillTransaction[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          itemsPerPage: number;
+          hasNextPage?: boolean;
+          hasPrevPage?: boolean;
+        };
+      }>
+    >('/admin/bills/electricity', {
+      params: filters,
+    });
+    return response.data;
+  },
+
+  getCableBills: async (filters: BillFilters) => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        transactions: BillTransaction[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          hasNextPage?: boolean;
+          hasPrevPage?: boolean;
+        };
+      }>
+    >('/admin/bills/cable', {
+      params: filters,
+    });
+    return response.data;
+  },
+
+  getBillStats: async (filters?: { startDate?: string; endDate?: string }) => {
+    const response = await apiClient.get<ApiResponse<BillStats>>('/admin/bills/stats', {
+      params: filters,
+    });
     return response.data;
   },
 };
