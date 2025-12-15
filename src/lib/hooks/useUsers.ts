@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../api/users';
-import { UserFilters } from '@/types/user';
+import { UserFilters, KycFilters } from '@/types/user';
 
 export function useUsers(filters: UserFilters) {
   return useQuery({
@@ -26,6 +26,57 @@ export function useUpdateUserStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+}
+
+export function usePendingKyc(filters: KycFilters) {
+  return useQuery({
+    queryKey: ['kyc-pending', filters],
+    queryFn: () => usersApi.getPendingKyc(filters),
+  });
+}
+
+export function useAllKyc(filters: KycFilters) {
+  return useQuery({
+    queryKey: ['kyc-all', filters],
+    queryFn: () => usersApi.getAllKyc(filters),
+  });
+}
+
+export function useUserKyc(userId: string) {
+  return useQuery({
+    queryKey: ['kyc-user', userId],
+    queryFn: () => usersApi.getUserKycDetails(userId),
+    enabled: !!userId,
+  });
+}
+
+export function useApproveKyc() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => usersApi.approveKyc(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kyc-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['kyc-all'] });
+      queryClient.invalidateQueries({ queryKey: ['kyc-user'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useRejectKyc() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason: string }) =>
+      usersApi.rejectKyc(userId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kyc-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['kyc-all'] });
+      queryClient.invalidateQueries({ queryKey: ['kyc-user'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }

@@ -18,6 +18,13 @@ export interface UserDetail extends User {
     bankName: string;
     accountName: string;
   };
+
+  // KYC fields
+  kycStatus?: 'pending' | 'approved' | 'rejected';
+  kycDocumentUrl?: string;
+  kycNotes?: string;
+  kycVerifiedBy?: string | null;
+  kycVerifiedAt?: string | null;
 }
 
 export interface UserFilters {
@@ -26,6 +33,15 @@ export interface UserFilters {
   status?: string;
   verified?: boolean;
   search?: string;
+}
+
+export interface KycFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: 'pending' | 'approved' | 'rejected';
 }
 
 

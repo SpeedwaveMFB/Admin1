@@ -46,4 +46,68 @@ export interface TransactionStats {
   failedTransactions: number;
 }
 
+export interface BillUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  speedwaveId: string;
+}
+
+export interface BillTransaction extends Transaction {
+  user?: BillUser;
+}
+
+export interface BillFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  userId?: string;
+  telco?: string;
+  phoneNumber?: string;
+  provider?: string;
+  meterNumber?: string;
+  smartcardNumber?: string;
+  search?: string;
+  type?: 'airtime' | 'data' | 'electricity' | 'cable_tv';
+}
+
+export interface BillStatsSummary {
+  totalTransactions: number;
+  totalSuccessful: number;
+  totalFailed: number;
+  totalPending: number;
+  totalRevenue: number;
+  completedRevenue: number;
+}
+
+export interface BillStatsByType {
+  type: 'airtime' | 'data' | 'electricity' | 'cable_tv';
+  totalCount: number;
+  successCount: number;
+  failedCount: number;
+  pendingCount: number;
+  totalAmount: number;
+  completedAmount: number;
+}
+
+export interface BillStatsByProvider {
+  type: string;
+  provider: string;
+  totalCount: number;
+  successCount: number;
+  failedCount: number;
+  totalAmount: number;
+  completedAmount: number;
+}
+
+export interface BillStats {
+  summary: BillStatsSummary;
+  byType: BillStatsByType[];
+  byProvider: BillStatsByProvider[];
+}
+
+
 
