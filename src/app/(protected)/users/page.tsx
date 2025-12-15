@@ -138,14 +138,30 @@ export default function UsersPage() {
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 180,
+      width: 220,
       sortable: false,
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            mx: 'auto',
+          }}
+        >
           <Button
             size="small"
             variant="outlined"
             startIcon={<Visibility />}
+            sx={{
+              borderRadius: 999,
+              px: 2.5,
+              textTransform: 'none',
+              fontWeight: 500,
+            }}
             onClick={() => router.push(`/users/${params.row.id}`)}
           >
             View
@@ -153,7 +169,15 @@ export default function UsersPage() {
           {params.row.accountStatus === 'active' ? (
             <Button
               size="small"
+              variant="outlined"
               color="error"
+              sx={{
+                borderRadius: 999,
+                px: 2.5,
+                textTransform: 'none',
+                fontWeight: 500,
+                borderColor: 'error.main',
+              }}
               onClick={() => handleStatusChange(params.row.id, 'suspended')}
             >
               Suspend
@@ -161,7 +185,15 @@ export default function UsersPage() {
           ) : (
             <Button
               size="small"
+              variant="outlined"
               color="success"
+              sx={{
+                borderRadius: 999,
+                px: 2.5,
+                textTransform: 'none',
+                fontWeight: 500,
+                borderColor: 'success.main',
+              }}
               onClick={() => handleStatusChange(params.row.id, 'active')}
             >
               Activate
@@ -169,6 +201,8 @@ export default function UsersPage() {
           )}
         </Box>
       ),
+      align: 'center',
+      headerAlign: 'center',
     },
   ];
 
