@@ -18,14 +18,13 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Link as MuiLink,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import { Verified, Refresh, Visibility } from '@mui/icons-material';
 import { usePendingKyc, useAllKyc, useApproveKyc, useRejectKyc, useUserKyc } from '@/lib/hooks/useUsers';
 import StatusBadge from '@/components/shared/StatusBadge';
+import DocumentViewer from '@/components/kyc/DocumentViewer';
 import { formatDateTime } from '@/lib/utils/date';
-import { formatCurrency } from '@/lib/utils/format';
 
 export default function KYCPage() {
   const [tab, setTab] = useState<'pending' | 'all'>('pending');
@@ -316,7 +315,7 @@ export default function KYCPage() {
       <Dialog
         open={!!selectedUserId}
         onClose={() => setSelectedUserId(null)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>KYC Details</DialogTitle>
@@ -350,18 +349,14 @@ export default function KYCPage() {
                   Notes: {kycDetail.data.kycNotes}
                 </Typography>
               )}
-              {kycDetail.data.kycDocumentUrl && (
-                <Typography variant="body2">
-                  Document:{' '}
-                  <MuiLink
-                    href={kycDetail.data.kycDocumentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View uploaded document
-                  </MuiLink>
+
+              {/* KYC Document Section */}
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  KYC Document
                 </Typography>
-              )}
+                <DocumentViewer documentUrl={kycDetail.data.kycDocumentUrl} />
+              </Box>
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary">
