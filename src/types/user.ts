@@ -44,4 +44,12 @@ export interface KycFilters {
   status?: 'pending' | 'approved' | 'rejected';
 }
 
+export interface SpeedTagLookupResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  speedwaveId: string;
+  // potentially other safe public info
+}
+
 

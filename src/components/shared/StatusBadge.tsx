@@ -7,6 +7,7 @@ interface StatusBadgeProps {
 
 export default function StatusBadge({ status, type = 'transaction' }: StatusBadgeProps) {
   const getColor = () => {
+    if (!status) return 'default';
     if (type === 'user') {
       switch (status.toLowerCase()) {
         case 'active':
@@ -35,7 +36,7 @@ export default function StatusBadge({ status, type = 'transaction' }: StatusBadg
 
   return (
     <Chip
-      label={status}
+      label={status || 'Unknown'}
       color={getColor()}
       size="small"
       sx={{ textTransform: 'capitalize', fontWeight: 500 }}

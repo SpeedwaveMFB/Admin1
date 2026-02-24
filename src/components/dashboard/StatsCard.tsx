@@ -70,14 +70,27 @@ export default function StatsCard({
           {icon && (
             <Box
               sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                backgroundColor: `${color}15`,
+                width: 56, // Slightly larger
+                height: 56,
+                borderRadius: 3, // More rounded (match theme shape)
+                backgroundColor: (theme) => {
+                  // If color is a theme path like "primary.main", use alpha
+                  // This requires a helper or simple trick. Since we passed "primary.main",
+                  // we can try to access the palette.
+                  // For simplicity in this revamp, let's use a light grey or conditional.
+                  // Better idea: Use the 'color' prop directly if it's a valid color, or map it.
+                  if (color.includes('.')) {
+                    const [main, sub] = color.split('.');
+                    // @ts-ignore
+                    const c = theme.palette[main]?.[sub] || theme.palette.primary.main;
+                    return `${c}1A`; // 10% opacity hex
+                  }
+                  return '#F3F4F6';
+                },
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color,
+                color: color, // Text color works with theme strings automatically
                 ml: 2,
               }}
             >

@@ -16,7 +16,6 @@ import {
   Chip,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { Visibility, Refresh } from '@mui/icons-material';
 import { useTransactions, useTransactionStats } from '@/lib/hooks/useTransactions';
 import StatusBadge from '@/components/shared/StatusBadge';
 import ExportButton from '@/components/shared/ExportButton';
@@ -24,13 +23,20 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import {
-  TrendingUp,
-  TrendingDown,
-  SwapHoriz,
-  HourglassEmpty,
-  CheckCircle,
-  Cancel,
-} from '@mui/icons-material';
+  TradeUpIcon,
+  TradeDownIcon,
+  Exchange01Icon, // SwapHoriz
+  HourglassIcon,
+  CheckmarkCircle02Icon, // CheckCircle (Completed)
+  Cancel01Icon, // Cancel (Failed)
+  SmartPhone01Icon, // PhoneAndroid
+  Wifi01Icon, // SignalCellularAlt
+  Tv01Icon, // Tv
+  FlashIcon, // Lightbulb
+  BankIcon, // AccountBalance
+  ViewIcon, // Visibility
+  RefreshIcon,
+} from 'hugeicons-react';
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -69,14 +75,23 @@ export default function TransactionsPage() {
       width: 130,
       renderCell: (params) => (
         <Chip
+          icon={
+            params.value === 'airtime' ? <SmartPhone01Icon size={16} /> :
+              params.value === 'data' ? <Wifi01Icon size={16} /> :
+                params.value === 'cable_tv' ? <Tv01Icon size={16} /> :
+                  params.value === 'electricity' ? <FlashIcon size={16} /> :
+                    params.value === 'bank_transfer' ? <BankIcon size={16} /> :
+                      params.value === 'transfer' ? <Exchange01Icon size={16} /> :
+                        undefined
+          }
           label={params.value.replace('_', ' ')}
           size="small"
           color={
             params.value === 'deposit'
               ? 'success'
               : params.value === 'withdrawal'
-              ? 'warning'
-              : 'primary'
+                ? 'warning'
+                : 'default'
           }
           sx={{ textTransform: 'capitalize' }}
         />
@@ -131,7 +146,7 @@ export default function TransactionsPage() {
           color="primary"
           onClick={() => router.push(`/transactions/${params.row.id}`)}
         >
-          <Visibility />
+          <ViewIcon size={18} />
         </IconButton>
       ),
     },
@@ -154,7 +169,7 @@ export default function TransactionsPage() {
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <IconButton onClick={() => refetch()} color="primary">
-            <Refresh />
+            <RefreshIcon size={20} />
           </IconButton>
           <ExportButton
             data={transactions}
@@ -176,7 +191,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Total Deposits"
               value={stats.totalDeposits}
-              icon={<TrendingUp />}
+              icon={<TradeUpIcon />}
               color="success.main"
               format="currency"
             />
@@ -185,7 +200,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Total Withdrawals"
               value={stats.totalWithdrawals}
-              icon={<TrendingDown />}
+              icon={<TradeDownIcon />}
               color="warning.main"
               format="currency"
             />
@@ -194,7 +209,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Total Transfers"
               value={stats.totalTransfers}
-              icon={<SwapHoriz />}
+              icon={<Exchange01Icon />}
               color="primary.main"
               format="currency"
             />
@@ -203,7 +218,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Pending"
               value={stats.pendingTransactions}
-              icon={<HourglassEmpty />}
+              icon={<HourglassIcon />}
               color="warning.main"
             />
           </Grid>
@@ -211,7 +226,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Completed"
               value={stats.completedTransactions}
-              icon={<CheckCircle />}
+              icon={<CheckmarkCircle02Icon />}
               color="success.main"
             />
           </Grid>
@@ -219,7 +234,7 @@ export default function TransactionsPage() {
             <StatsCard
               title="Failed"
               value={stats.failedTransactions}
-              icon={<Cancel />}
+              icon={<Cancel01Icon />}
               color="error.main"
             />
           </Grid>

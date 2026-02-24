@@ -25,6 +25,7 @@ export interface Transaction {
   planName?: string;
   createdAt: string;
   updatedAt?: string;
+  metadata?: any;
 }
 
 export interface TransactionFilters {

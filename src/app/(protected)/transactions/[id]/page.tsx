@@ -12,8 +12,11 @@ import {
   Card,
   CardContent,
   Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, ExpandMore, ContentCopy } from '@mui/icons-material';
 import { useTransaction } from '@/lib/hooks/useTransactions';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
@@ -140,39 +143,80 @@ export default function TransactionDetailPage() {
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  {transaction.phoneNumber && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Phone Number', transaction.phoneNumber)}
-                    </Grid>
+                  {/* Electricity Specifics */}
+                  {transaction.type === 'electricity' && (
+                    <>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Token', transaction.metadata?.payflexResponse?.token || transaction.metadata?.token || 'N/A')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Meter Number', transaction.metadata?.meter || transaction.meterNumber || 'N/A')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Unit', transaction.metadata?.unit || 'N/A')}
+                      </Grid>
+                    </>
                   )}
-                  {transaction.meterNumber && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Meter Number', transaction.meterNumber)}
-                    </Grid>
+
+                  {/* Airtime/Data Specifics */}
+                  {['airtime', 'data'].includes(transaction.type) && (
+                    <>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Phone Number', transaction.metadata?.phoneNumber || transaction.phoneNumber || 'N/A')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Network', transaction.metadata?.network || transaction.serviceProvider || 'N/A')}
+                      </Grid>
+                      {transaction.type === 'data' && (
+                        <Grid item xs={12} sm={6}>
+                          {renderField('Plan', transaction.metadata?.plan_name || transaction.planName || 'N/A')}
+                        </Grid>
+                      )}
+                    </>
                   )}
-                  {transaction.smartcardNumber && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Smartcard Number', transaction.smartcardNumber)}
-                    </Grid>
-                  )}
-                  {transaction.customerName && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Customer Name', transaction.customerName)}
-                    </Grid>
-                  )}
-                  {transaction.planName && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Plan Name', transaction.planName)}
-                    </Grid>
-                  )}
-                  {transaction.serviceProvider && (
-                    <Grid item xs={12} sm={6}>
-                      {renderField('Service Provider', transaction.serviceProvider)}
-                    </Grid>
+
+                  {/* Cable Specifics */}
+                  {transaction.type === 'cable_tv' && (
+                    <>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Smartcard/IUC', transaction.metadata?.smartcardNumber || transaction.smartcardNumber || 'N/A')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Provider', transaction.metadata?.provider || transaction.serviceProvider || 'N/A')}
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {renderField('Package', transaction.metadata?.package_name || transaction.planName || 'N/A')}
+                      </Grid>
+                    </>
                   )}
                 </Grid>
               </>
             )}
+
+            {/* Raw Data Section */}
+            <Box sx={{ mt: 4 }}>
+              <Accordion variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography fontWeight={600}>Raw Data</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box
+                    component="pre"
+                    sx={{
+                      p: 2,
+                      bgcolor: 'grey.100',
+                      borderRadius: 1,
+                      overflow: 'auto',
+                      fontSize: '0.875rem',
+                      fontFamily: 'monospace',
+                      maxHeight: 400,
+                    }}
+                  >
+                    {JSON.stringify(transaction.metadata || {}, null, 2)}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            </Box>
           </Paper>
         </Grid>
 

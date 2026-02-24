@@ -101,6 +101,13 @@ export const usersApi = {
     >(`/admin/users/${userId}/kyc-documents`);
     return response.data;
   },
+
+  updateSpeedTag: async (userId: string, speedTag: string) => {
+    const response = await apiClient.put<ApiResponse>(`/admin/users/${userId}/speed-tag`, {
+      speedTag,
+    });
+    return response.data;
+  },
 };
 
 

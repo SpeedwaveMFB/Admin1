@@ -24,6 +24,10 @@ import { formatDateTime } from '@/lib/utils/date';
 import StatusBadge from '@/components/shared/StatusBadge';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { Edit } from '@mui/icons-material';
+import { usersApi } from '@/lib/api/users';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -62,6 +66,35 @@ export default function UserDetailPage() {
   const { data: userData, isLoading, error } = useUser(userId);
   const { data: transactionsData } = useTransactions({ userId, limit: 20 });
   const updateStatusMutation = useUpdateUserStatus();
+  const queryClient = useQueryClient();
+
+  const [editSpeedTag, setEditSpeedTag] = useState({
+    open: false,
+    value: '',
+    loading: false,
+  });
+
+  const updateSpeedTagMutation = useMutation({
+    mutationFn: (newTag: string) => usersApi.updateSpeedTag(userId, newTag),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user', userId] });
+      setEditSpeedTag((prev) => ({ ...prev, open: false, loading: false }));
+    },
+    onError: () => {
+      setEditSpeedTag((prev) => ({ ...prev, loading: false }));
+      // Error handling logic if needed
+    },
+  });
+
+  const handleUpdateSpeedTag = async () => {
+    if (!editSpeedTag.value) return;
+    setEditSpeedTag((prev) => ({ ...prev, loading: true }));
+    try {
+      await updateSpeedTagMutation.mutateAsync(editSpeedTag.value);
+    } catch (error) {
+      console.error('Failed to update speed tag:', error);
+    }
+  };
 
   const user = userData?.data;
   const transactions = transactionsData?.data?.transactions || [];
@@ -198,9 +231,19 @@ export default function UserDetailPage() {
                 <Typography variant="body2" color="text.secondary">
                   Speedwave ID
                 </Typography>
-                <Typography variant="body1" fontWeight={600}>
-                  {user.speedwaveId || 'N/A'}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body1" fontWeight={600}>
+                    {user.speedwaveId || 'N/A'}
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Edit />}
+                    onClick={() => setEditSpeedTag({ open: true, value: user.speedwaveId || '', loading: false })}
+                    sx={{ minWidth: 'auto', p: 0.5 }}
+                  >
+                    Edit
+                  </Button>
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
@@ -297,6 +340,29 @@ export default function UserDetailPage() {
         onCancel={() => setConfirmDialog({ open: false, action: '', status: '' })}
         severity={confirmDialog.action === 'Suspend' ? 'warning' : 'info'}
       />
+      <Dialog open={editSpeedTag.open} onClose={() => setEditSpeedTag({ ...editSpeedTag, open: false })}>
+        <DialogTitle>Edit Speed Tag</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+            Warning: This is intended to be permanent. Only change if necessary.
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Speedwave ID"
+            fullWidth
+            variant="outlined"
+            value={editSpeedTag.value}
+            onChange={(e) => setEditSpeedTag({ ...editSpeedTag, value: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditSpeedTag({ ...editSpeedTag, open: false })}>Cancel</Button>
+          <Button onClick={handleUpdateSpeedTag} disabled={editSpeedTag.loading}>
+            {editSpeedTag.loading ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

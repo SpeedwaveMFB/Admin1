@@ -1,7 +1,7 @@
-import { Card, CardContent, Typography } from '@mui/material';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -21,40 +21,104 @@ interface TransactionChartProps {
 
 export default function TransactionChart({ data }: TransactionChartProps) {
   return (
-    <Card elevation={2}>
-      <CardContent>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
-          Transaction Volume
-        </Typography>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
+    <Card
+      elevation={0}
+      sx={{
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 3,
+        height: '100%'
+      }}
+    >
+      <CardContent sx={{ p: 3, height: '100%' }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" fontWeight={700} gutterBottom>
+            Transaction Activity
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Overview of deposits, withdrawals, and transfers over time
+          </Typography>
+        </Box>
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorDeposits" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorWithdrawals" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorTransfers" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#6B46C1" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#6B46C1" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              dy={10}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              dx={-10}
+              tickFormatter={(value) => {
+                if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                return value;
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: 'none',
+                borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                padding: '12px'
+              }}
+              formatter={(value: number) => [`₦${value.toLocaleString()}`, '']}
+              labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '8px' }}
+            />
+            <Legend
+              verticalAlign="top"
+              height={36}
+              iconType="circle"
+              wrapperStyle={{ top: -10, right: 0 }}
+            />
+            <Area
               type="monotone"
               dataKey="deposits"
               stroke="#10B981"
-              name="Deposits"
               strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorDeposits)"
+              name="Deposits"
             />
-            <Line
+            <Area
               type="monotone"
               dataKey="withdrawals"
               stroke="#F59E0B"
-              name="Withdrawals"
               strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorWithdrawals)"
+              name="Withdrawals"
             />
-            <Line
+            <Area
               type="monotone"
               dataKey="transfers"
               stroke="#6B46C1"
-              name="Transfers"
               strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorTransfers)"
+              name="Transfers"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

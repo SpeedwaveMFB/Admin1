@@ -17,7 +17,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 4,
           width: { sm: `calc(100% - 260px)` },
           minHeight: '100vh',
           backgroundColor: '#f5f5f5',
