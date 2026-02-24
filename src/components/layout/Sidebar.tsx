@@ -1,18 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Box,
-  Typography,
-  Divider,
-} from '@mui/material';
+import { cn } from '@/lib/utils';
 import {
   DashboardSquare01Icon,
   UserGroupIcon,
@@ -21,13 +10,11 @@ import {
   Wifi01Icon,
   FlashIcon,
   Tv01Icon,
-  SecurityCheckIcon, // Corrected from ShieldCheckIcon
+  SecurityCheckIcon,
   BankIcon,
-  UserMultiple02Icon, // Assuming UserMultipleIcon was wrong or check if UserMultiple exists. UserGroup is usually enough. Let's use UserGroupIcon if UserMultiple fails. Actually let's use UserGroupIcon for both if needed or stick to what worked. 
-  // Wait, the error didn't mention UserMultipleIcon. It mentioned ShieldCheckIcon and FileDoctumentIcon.
-  // I will just fix those two.
+  UserMultiple02Icon,
   Analytics01Icon,
-  File02Icon, // Corrected from FileDoctumentIcon
+  File02Icon,
   Settings02Icon,
   Store01Icon
 } from 'hugeicons-react';
@@ -65,109 +52,65 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: DRAWER_WIDTH,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: DRAWER_WIDTH,
-          boxSizing: 'border-box',
-          borderRight: 'none', // Removed border for cleaner look
-          backgroundColor: '#ffffff', // White background
-          boxShadow: '4px 0 24px rgba(0,0,0,0.02)', // Very subtle shadow
-        },
-      }}
+    <aside
+      className="hidden md:flex flex-col flex-shrink-0 bg-white border-r border-slate-200 h-screen sticky top-0"
+      style={{ width: DRAWER_WIDTH }}
     >
-      <Toolbar sx={{ minHeight: '80px !important' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1 }}>
-          <Typography variant="h5" component="div" color="primary" fontWeight={800} letterSpacing="-0.5px">
-            Speedwave
-          </Typography>
-        </Box>
-      </Toolbar>
+      <div className="flex items-center min-h-[80px] px-6">
+        <h1 className="text-xl font-extrabold text-blue-600 tracking-tight">
+          Speedwave
+        </h1>
+      </div>
 
-      <List sx={{ px: 2, pt: 2 }}>
-        {menuItems.map((item) => (
-          <Box key={item.path} sx={{ mb: 1 }}>
-            <ListItem disablePadding>
-              <ListItemButton
-                selected={isActive(item.path)}
+      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        {menuItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <div key={item.path} className="mb-1">
+              <button
                 onClick={() => router.push(item.path)}
-                sx={{
-                  borderRadius: '12px', // More rounded
-                  mb: 0.5,
-                  py: 1.5,
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'white',
-                    boxShadow: '0 4px 12px rgba(107, 70, 193, 0.2)', // Soft shadow on active
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    },
-                    '& .MuiListItemIcon-root': {
-                      color: 'white',
-                    },
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-                  },
-                }}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                )}
               >
-                <ListItemIcon sx={{ minWidth: 44, color: isActive(item.path) ? 'inherit' : 'text.secondary' }}>
+                <div className={cn('flex-shrink-0', active ? 'text-white' : 'text-slate-400')}>
                   {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.title}
-                  primaryTypographyProps={{
-                    fontSize: '0.9rem',
-                    fontWeight: isActive(item.path) ? 600 : 500,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-            {item.subItems && isActive(item.path) && (
-              <List sx={{ pl: 2, mt: 0.5 }}>
-                {item.subItems.map((subItem) => (
-                  <ListItem key={subItem.path} disablePadding>
-                    <ListItemButton
-                      selected={pathname === subItem.path}
-                      onClick={() => router.push(subItem.path)}
-                      sx={{
-                        borderRadius: '10px',
-                        py: 1,
-                        mb: 0.5,
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgba(107, 70, 193, 0.1)', // Light purple bg
-                          color: 'primary.main',
-                          '&:hover': {
-                            backgroundColor: 'rgba(107, 70, 193, 0.15)',
-                          },
-                          '& .MuiListItemIcon-root': {
-                            color: 'primary.main',
-                          },
-                        },
-                      }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 36, color: pathname === subItem.path ? 'inherit' : 'text.secondary' }}>
-                        {subItem.icon}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={subItem.title}
-                        primaryTypographyProps={{
-                          fontSize: '0.85rem',
-                          fontWeight: 500,
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Box>
-        ))}
-      </List>
-    </Drawer>
+                </div>
+                {item.title}
+              </button>
+
+              {item.subItems && active && (
+                <div className="mt-1 pl-10 pr-2 space-y-1">
+                  {item.subItems.map((subItem) => {
+                    const subActive = pathname === subItem.path;
+                    return (
+                      <button
+                        key={subItem.path}
+                        onClick={() => router.push(subItem.path)}
+                        className={cn(
+                          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                          subActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        )}
+                      >
+                        <div className={cn('flex-shrink-0', subActive ? 'text-blue-600' : 'text-slate-400')}>
+                          {subItem.icon}
+                        </div>
+                        {subItem.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }
 

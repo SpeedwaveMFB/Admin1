@@ -1,5 +1,6 @@
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatNumber } from '@/lib/utils/format';
+import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
   title: string;
@@ -28,79 +29,50 @@ export default function StatsCard({
     return value;
   };
 
+  const getColorClasses = (muiColor: string) => {
+    switch (muiColor) {
+      case 'success.main': return { text: 'text-green-600', bg: 'bg-green-100' };
+      case 'warning.main': return { text: 'text-yellow-600', bg: 'bg-yellow-100' };
+      case 'error.main': return { text: 'text-red-600', bg: 'bg-red-100' };
+      case 'info.main': return { text: 'text-blue-600', bg: 'bg-blue-100' };
+      case 'primary.main':
+      default:
+        return { text: 'text-blue-700', bg: 'bg-blue-50' };
+    }
+  };
+
+  const colors = getColorClasses(color);
+
   return (
-    <Card
-      elevation={2}
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <CardContent
-        sx={{
-          flexGrow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            height: '100%',
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
-            <Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+    <Card className="h-full flex flex-col border-slate-200 shadow-sm">
+      <CardContent className="flex-grow flex flex-col p-6">
+        <div className="flex items-start justify-between h-full">
+          <div className="flex flex-col justify-between flex-1">
+            <div>
+              <p className="text-sm font-medium text-slate-500 mb-1">
                 {title}
-              </Typography>
-              <Typography variant="h4" fontWeight={700} sx={{ color, mb: subtitle ? 1 : 0 }}>
+              </p>
+              <h3 className={cn('text-2xl font-bold tracking-tight', colors.text, subtitle ? 'mb-1' : '')}>
                 {formattedValue()}
-              </Typography>
-            </Box>
+              </h3>
+            </div>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <p className="text-sm text-slate-500">
                 {subtitle}
-              </Typography>
+              </p>
             )}
-          </Box>
+          </div>
           {icon && (
-            <Box
-              sx={{
-                width: 56, // Slightly larger
-                height: 56,
-                borderRadius: 3, // More rounded (match theme shape)
-                backgroundColor: (theme) => {
-                  // If color is a theme path like "primary.main", use alpha
-                  // This requires a helper or simple trick. Since we passed "primary.main",
-                  // we can try to access the palette.
-                  // For simplicity in this revamp, let's use a light grey or conditional.
-                  // Better idea: Use the 'color' prop directly if it's a valid color, or map it.
-                  if (color.includes('.')) {
-                    const [main, sub] = color.split('.');
-                    // @ts-ignore
-                    const c = theme.palette[main]?.[sub] || theme.palette.primary.main;
-                    return `${c}1A`; // 10% opacity hex
-                  }
-                  return '#F3F4F6';
-                },
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: color, // Text color works with theme strings automatically
-                ml: 2,
-              }}
-            >
+            <div className={cn(
+              'w-14 h-14 rounded-xl flex items-center justify-center ml-4 shrink-0',
+              colors.bg,
+              colors.text
+            )}>
               {icon}
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
       </CardContent>
     </Card>
   );
 }
-
-

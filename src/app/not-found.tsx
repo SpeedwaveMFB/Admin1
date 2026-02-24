@@ -1,138 +1,59 @@
 'use client';
 
-import { Box, Typography, Button, Container } from '@mui/material';
-import { Home, ArrowBack } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Home, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
-    <Container maxWidth="md">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 'calc(100vh - 200px)',
-          textAlign: 'center',
-          py: 8,
-        }}
-      >
-        <Typography
-          variant="h1"
-          sx={{
-            fontSize: { xs: '8rem', sm: '12rem' },
-            fontWeight: 700,
-            background: 'linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            mb: 2,
-            lineHeight: 1,
-          }}
-        >
+    <div className="max-w-4xl mx-auto px-4">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center py-16">
+        <h1 className="text-8xl sm:text-9xl font-bold bg-gradient-to-br from-purple-600 to-violet-500 bg-clip-text text-transparent mb-6 leading-none">
           404
-        </Typography>
+        </h1>
 
-        <Typography
-          variant="h4"
-          fontWeight={600}
-          gutterBottom
-          sx={{ mb: 2 }}
-        >
+        <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-4">
           Page Not Found
-        </Typography>
+        </h2>
 
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mb: 4, maxWidth: '500px' }}
-        >
-          The page you're looking for doesn't exist or has been moved. 
-          Let's get you back on track.
-        </Typography>
+        <p className="text-lg text-slate-500 mb-8 max-w-[500px]">
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+          Let&apos;s get you back on track.
+        </p>
 
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<Home />}
-            component={Link}
-            href="/dashboard"
-            sx={{
-              px: 4,
-              py: 1.5,
-              borderRadius: 2,
-            }}
-          >
-            Go to Dashboard
+        <div className="flex gap-4 flex-wrap justify-center">
+          <Button asChild size="lg" className="px-8 h-12 rounded-xl text-base bg-blue-600 hover:bg-blue-700">
+            <Link href="/dashboard">
+              <Home className="mr-2 h-5 w-5" />
+              Go to Dashboard
+            </Link>
           </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<ArrowBack />}
-            onClick={() => router.back()}
-            sx={{
-              px: 4,
-              py: 1.5,
-              borderRadius: 2,
-            }}
-          >
+          <Button variant="outline" size="lg" onClick={() => router.back()} className="px-8 h-12 rounded-xl text-base">
+            <ArrowLeft className="mr-2 h-5 w-5" />
             Go Back
           </Button>
-        </Box>
+        </div>
 
-        <Box
-          sx={{
-            mt: 8,
-            p: 4,
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-            border: '1px solid',
-            borderColor: 'divider',
-            maxWidth: '400px',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+        <div className="mt-16 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm max-w-[400px] w-full text-left">
+          <h3 className="text-sm font-medium text-slate-500 mb-3 uppercase tracking-wider">
             Quick Links
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
-            <Button
-              component={Link}
-              href="/dashboard"
-              variant="text"
-              sx={{ justifyContent: 'flex-start' }}
-            >
-              Dashboard
+          </h3>
+          <div className="flex flex-col space-y-1">
+            <Button asChild variant="ghost" className="justify-start text-slate-700 font-medium">
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
-            <Button
-              component={Link}
-              href="/users"
-              variant="text"
-              sx={{ justifyContent: 'flex-start' }}
-            >
-              Users
+            <Button asChild variant="ghost" className="justify-start text-slate-700 font-medium">
+              <Link href="/users">Users</Link>
             </Button>
-            <Button
-              component={Link}
-              href="/transactions"
-              variant="text"
-              sx={{ justifyContent: 'flex-start' }}
-            >
-              Transactions
+            <Button asChild variant="ghost" className="justify-start text-slate-700 font-medium">
+              <Link href="/transactions">Transactions</Link>
             </Button>
-          </Box>
-        </Box>
-      </Box>
-    </Container>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
-
-
-
-
-
-

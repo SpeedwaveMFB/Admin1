@@ -1,15 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-  Alert,
-  Paper,
-} from '@mui/material';
-import { Download, Image as ImageIcon, PictureAsPdf, BrokenImage } from '@mui/icons-material';
+import { Download, ImageIcon, FileText, ImageOff, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { getDocumentType, getFilenameFromUrl, getOptimizedImageUrl } from '@/lib/utils/document';
 
 interface DocumentViewerProps {
@@ -37,90 +31,60 @@ export default function DocumentViewer({
 
   if (!documentUrl) {
     return (
-      <Alert severity="info" sx={{ mt: 2 }}>
-        No document uploaded yet.
+      <Alert className="mt-2 bg-slate-50 border-slate-200 text-slate-600">
+        <AlertDescription>No document uploaded yet.</AlertDescription>
       </Alert>
     );
   }
 
   if (documentType === 'unknown') {
     return (
-      <Box sx={{ mt: 2 }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Unable to preview this document type. Click below to download.
+      <div className="mt-2">
+        <Alert className="mb-2 bg-amber-50 border-amber-200 text-amber-800">
+          <AlertDescription>Unable to preview this document type. Click below to download.</AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
-          startIcon={<Download />}
+          variant="outline"
           onClick={handleDownload}
-          sx={{
-            borderRadius: 999,
-            px: 3,
-            textTransform: 'none',
-            fontWeight: 500,
-          }}
+          className="rounded-full px-6"
         >
+          <Download className="mr-2 h-4 w-4" />
           Download Document
         </Button>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <div className="mt-4">
       {/* Document Type Indicator */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+      <div className="flex items-center gap-2 mb-3">
         {documentType === 'image' ? (
-          <ImageIcon fontSize="small" color="primary" />
+          <ImageIcon className="h-4 w-4 text-blue-600" />
         ) : (
-          <PictureAsPdf fontSize="small" color="error" />
+          <FileText className="h-4 w-4 text-red-600" />
         )}
-        <Typography variant="body2" color="text.secondary">
+        <p className="text-sm text-slate-500">
           {documentType === 'image' ? 'Image Document' : 'PDF Document'} - {filename}
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
       {/* Document Preview */}
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 2,
-          backgroundColor: 'background.default',
-          borderRadius: 2,
-          overflow: 'hidden',
-        }}
-      >
+      <div className="p-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {documentType === 'image' && (
-          <Box sx={{ position: 'relative' }}>
+          <div className="relative flex justify-center bg-slate-50 min-h-[200px] rounded-lg border border-slate-100 p-2">
             {imageLoading && !imageError && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: 200,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
+              <div className="absolute inset-0 flex justify-center items-center bg-transparent">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
             )}
             {imageError ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 200,
-                  color: 'text.secondary',
-                }}
-              >
-                <BrokenImage sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2">Failed to load image</Typography>
-              </Box>
+              <div className="flex flex-col items-center justify-center min-h-[200px] text-slate-400">
+                <ImageOff className="h-12 w-12 mb-2" />
+                <p className="text-sm">Failed to load image</p>
+              </div>
             ) : (
-              <Box
-                component="img"
+              <img
                 src={getOptimizedImageUrl(documentUrl, maxWidth)}
                 alt="KYC Document"
                 onLoad={() => setImageLoading(false)}
@@ -128,69 +92,41 @@ export default function DocumentViewer({
                   setImageLoading(false);
                   setImageError(true);
                 }}
-                sx={{
-                  maxWidth: '100%',
-                  height: 'auto',
-                  display: imageLoading ? 'none' : 'block',
-                  borderRadius: 1,
-                }}
+                className={`max-w-full h-auto rounded-md object-contain ${imageLoading ? 'hidden' : 'block'}`}
               />
             )}
-          </Box>
+          </div>
         )}
 
         {documentType === 'pdf' && (
-          <Box sx={{ position: 'relative' }}>
+          <div className="relative rounded-lg border border-slate-100 overflow-hidden bg-slate-50">
             {pdfLoading && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'background.paper',
-                  zIndex: 1,
-                }}
-              >
-                <CircularProgress size={32} />
-              </Box>
+              <div className="absolute inset-0 flex justify-center items-center bg-white z-10">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
             )}
-            <Box
-              component="iframe"
+            <iframe
               src={documentUrl}
               title="KYC Document PDF"
               onLoad={() => setPdfLoading(false)}
-              sx={{
-                width: '100%',
-                height: pdfHeight,
-                border: 'none',
-                borderRadius: 1,
-              }}
+              className="w-full border-none rounded-md"
+              style={{ height: pdfHeight }}
             />
-          </Box>
+          </div>
         )}
-      </Paper>
+      </div>
 
       {/* Download Button */}
-      <Box sx={{ mt: 2 }}>
+      <div className="mt-4">
         <Button
-          variant="outlined"
-          startIcon={<Download />}
+          variant="outline"
           onClick={handleDownload}
-          sx={{
-            borderRadius: 999,
-            px: 3,
-            textTransform: 'none',
-            fontWeight: 500,
-          }}
+          className="rounded-full px-6 bg-white hover:bg-slate-50"
         >
+          <Download className="mr-2 h-4 w-4" />
           Download Original
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

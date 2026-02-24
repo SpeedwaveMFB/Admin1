@@ -1,6 +1,5 @@
 'use client';
 
-import { Box, Toolbar } from '@mui/material';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -10,28 +9,16 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Header />
+    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900">
       <Sidebar />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 4,
-          width: { sm: `calc(100% - 260px)` },
-          minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
-        }}
-      >
-        <Toolbar /> {/* Spacer for fixed header */}
-        {children}
-      </Box>
-    </Box>
+      <div className="flex flex-col flex-1 w-full min-w-0">
+        <Header />
+        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }
-
-
-
-
-
-

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import MainLayout from '@/components/layout/MainLayout';
-import { CircularProgress, Box } from '@mui/material';
+import { Loader2 } from 'lucide-react';
 
 export default function ProtectedLayout({
   children,
@@ -14,11 +14,17 @@ export default function ProtectedLayout({
   const router = useRouter();
   const { isAuthenticated, token, updateLastActivity } = useAuthStore();
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && (!isAuthenticated || !token)) {
       router.push('/login');
     }
-  }, [isAuthenticated, token, router]);
+  }, [isHydrated, isAuthenticated, token, router]);
 
   // Update activity on any interaction
   useEffect(() => {
@@ -37,18 +43,11 @@ export default function ProtectedLayout({
     };
   }, [updateLastActivity]);
 
-  if (!isAuthenticated || !token) {
+  if (!isHydrated || !isAuthenticated || !token) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <CircularProgress />
-      </Box>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
     );
   }
 

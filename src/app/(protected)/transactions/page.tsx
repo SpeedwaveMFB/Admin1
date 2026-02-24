@@ -2,26 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Paper,
-  Grid,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Chip,
-} from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { ColumnDef } from '@tanstack/react-table';
 import { useTransactions, useTransactionStats } from '@/lib/hooks/useTransactions';
 import StatusBadge from '@/components/shared/StatusBadge';
 import ExportButton from '@/components/shared/ExportButton';
 import StatsCard from '@/components/dashboard/StatsCard';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
+import { DataTable } from '@/components/shared/DataTable';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
 import {
   TradeUpIcon,
   TradeDownIcon,
@@ -38,6 +38,8 @@ import {
   RefreshIcon,
 } from 'hugeicons-react';
 
+type TransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'bank_transfer' | 'airtime' | 'data' | 'electricity' | 'cable_tv';
+
 export default function TransactionsPage() {
   const router = useRouter();
   const [filters, setFilters] = useState({
@@ -50,127 +52,115 @@ export default function TransactionsPage() {
     endDate: '',
   });
 
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
     pageSize: 25,
   });
 
   const { data, isLoading, error, refetch } = useTransactions(filters);
   const { data: statsData } = useTransactionStats();
 
-  const handlePageChange = (newModel: GridPaginationModel) => {
-    setPaginationModel(newModel);
-    setFilters((prev) => ({ ...prev, page: newModel.page + 1 }));
+  const handlePageChange = (updaterOrValue: any) => {
+    setPagination(updaterOrValue);
+    const newPageIndex = typeof updaterOrValue === 'function' ? updaterOrValue(pagination).pageIndex : updaterOrValue.pageIndex;
+    setFilters((prev) => ({ ...prev, page: newPageIndex + 1 }));
   };
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const columns: GridColDef[] = [
+  const getTransactionTypeIcon = (type: TransactionType) => {
+    switch (type) {
+      case 'airtime': return <SmartPhone01Icon size={14} className="mr-1" />;
+      case 'data': return <Wifi01Icon size={14} className="mr-1" />;
+      case 'cable_tv': return <Tv01Icon size={14} className="mr-1" />;
+      case 'electricity': return <FlashIcon size={14} className="mr-1" />;
+      case 'bank_transfer': return <BankIcon size={14} className="mr-1" />;
+      case 'transfer': return <Exchange01Icon size={14} className="mr-1" />;
+      default: return null;
+    }
+  };
+
+  const getTransactionTypeColor = (type: TransactionType) => {
+    if (type === 'deposit') return 'bg-green-100 text-green-800 border-transparent';
+    if (type === 'withdrawal') return 'bg-yellow-100 text-yellow-800 border-transparent';
+    return 'bg-slate-100 text-slate-800 border-transparent';
+  };
+
+  const columns: ColumnDef<any>[] = [
     {
-      field: 'type',
-      headerName: 'Type',
-      width: 130,
-      renderCell: (params) => (
-        <Chip
-          icon={
-            params.value === 'airtime' ? <SmartPhone01Icon size={16} /> :
-              params.value === 'data' ? <Wifi01Icon size={16} /> :
-                params.value === 'cable_tv' ? <Tv01Icon size={16} /> :
-                  params.value === 'electricity' ? <FlashIcon size={16} /> :
-                    params.value === 'bank_transfer' ? <BankIcon size={16} /> :
-                      params.value === 'transfer' ? <Exchange01Icon size={16} /> :
-                        undefined
-          }
-          label={params.value.replace('_', ' ')}
-          size="small"
-          color={
-            params.value === 'deposit'
-              ? 'success'
-              : params.value === 'withdrawal'
-                ? 'warning'
-                : 'default'
-          }
-          sx={{ textTransform: 'capitalize' }}
-        />
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={`capitalize font-normal ${getTransactionTypeColor(row.original.type as TransactionType)}`}>
+          {getTransactionTypeIcon(row.original.type as TransactionType)}
+          {row.original.type.replace('_', ' ')}
+        </Badge>
       ),
     },
     {
-      field: 'amount',
-      headerName: 'Amount',
-      width: 140,
-      renderCell: (params) => (
-        <Typography fontWeight={600}>{formatCurrency(params.value)}</Typography>
-      ),
+      accessorKey: 'amount',
+      header: 'Amount',
+      cell: ({ row }) => <span className="font-semibold">{formatCurrency(row.original.amount)}</span>,
     },
     {
-      field: 'status',
-      headerName: 'Status',
-      width: 120,
-      renderCell: (params) => <StatusBadge status={params.value} />,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      field: 'userName',
-      headerName: 'User',
-      flex: 1,
-      minWidth: 160,
-      valueGetter: (params, row) => row.userName || row.userEmail || 'N/A',
+      accessorKey: 'userName',
+      header: 'User',
+      cell: ({ row }) => row.original.userName || row.original.userEmail || 'N/A',
     },
     {
-      field: 'reference',
-      headerName: 'Reference',
-      flex: 1,
-      minWidth: 180,
+      accessorKey: 'reference',
+      header: 'Reference',
     },
     {
-      field: 'provider',
-      headerName: 'Provider',
-      width: 100,
+      accessorKey: 'provider',
+      header: 'Provider',
     },
     {
-      field: 'createdAt',
-      headerName: 'Date',
-      width: 160,
-      valueGetter: (value) => formatDateTime(value),
+      accessorKey: 'createdAt',
+      header: 'Date',
+      cell: ({ row }) => formatDateTime(row.original.createdAt),
     },
     {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 100,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton
-          size="small"
-          color="primary"
-          onClick={() => router.push(`/transactions/${params.row.id}`)}
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-primary hover:text-primary hover:bg-primary/10"
+          onClick={() => router.push(`/transactions/${row.original.id}`)}
         >
           <ViewIcon size={18} />
-        </IconButton>
+        </Button>
       ),
     },
   ];
 
   const transactions = data?.data?.transactions || [];
-  const pagination = data?.data?.pagination;
+  const paginationData = data?.data?.pagination;
   const stats = statsData?.data;
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Transactions
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Transactions</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Monitor and manage all platform transactions
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <IconButton onClick={() => refetch()} color="primary">
-            <RefreshIcon size={20} />
-          </IconButton>
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => refetch()}>
+            <RefreshIcon size={20} className="text-slate-600" />
+          </Button>
           <ExportButton
             data={transactions}
             filename="transactions"
@@ -182,162 +172,143 @@ export default function TransactionsPage() {
               { header: 'Date', dataKey: 'createdAt' },
             ]}
           />
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {stats && (
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatsCard
-              title="Total Deposits"
-              value={stats.totalDeposits}
-              icon={<TradeUpIcon />}
-              color="success.main"
-              format="currency"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatsCard
-              title="Total Withdrawals"
-              value={stats.totalWithdrawals}
-              icon={<TradeDownIcon />}
-              color="warning.main"
-              format="currency"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatsCard
-              title="Total Transfers"
-              value={stats.totalTransfers}
-              icon={<Exchange01Icon />}
-              color="primary.main"
-              format="currency"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Pending"
-              value={stats.pendingTransactions}
-              icon={<HourglassIcon />}
-              color="warning.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Completed"
-              value={stats.completedTransactions}
-              icon={<CheckmarkCircle02Icon />}
-              color="success.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Failed"
-              value={stats.failedTransactions}
-              icon={<Cancel01Icon />}
-              color="error.main"
-            />
-          </Grid>
-        </Grid>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatsCard
+            title="Total Deposits"
+            value={stats.totalDeposits}
+            icon={<TradeUpIcon />}
+            color="success.main"
+            format="currency"
+          />
+          <StatsCard
+            title="Total Withdrawals"
+            value={stats.totalWithdrawals}
+            icon={<TradeDownIcon />}
+            color="warning.main"
+            format="currency"
+          />
+          <StatsCard
+            title="Total Transfers"
+            value={stats.totalTransfers}
+            icon={<Exchange01Icon />}
+            color="primary.main"
+            format="currency"
+          />
+          <StatsCard
+            title="Pending"
+            value={stats.pendingTransactions}
+            icon={<HourglassIcon />}
+            color="warning.main"
+          />
+          <StatsCard
+            title="Completed"
+            value={stats.completedTransactions}
+            icon={<CheckmarkCircle02Icon />}
+            color="success.main"
+          />
+          <StatsCard
+            title="Failed"
+            value={stats.failedTransactions}
+            icon={<Cancel01Icon />}
+            color="error.main"
+          />
+        </div>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <div className="bg-red-50 text-red-700 p-4 rounded-md text-sm">
           Failed to load transactions. Please try again.
-        </Alert>
+        </div>
       )}
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Type"
-              value={filters.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
-            >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="deposit">Deposit</MenuItem>
-              <MenuItem value="withdrawal">Withdrawal</MenuItem>
-              <MenuItem value="transfer">Transfer</MenuItem>
-              <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
-              <MenuItem value="airtime">Airtime</MenuItem>
-              <MenuItem value="data">Data</MenuItem>
-              <MenuItem value="electricity">Electricity</MenuItem>
-              <MenuItem value="cable_tv">Cable TV</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-              <MenuItem value="failed">Failed</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              type="date"
-              label="Start Date"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              type="date"
-              label="End Date"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={9}>
-            <TextField
-              fullWidth
-              label="User ID"
-              placeholder="Filter by user ID"
-              value={filters.userId}
-              onChange={(e) => handleFilterChange('userId', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{ height: '56px' }}
-              onClick={() => refetch()}
-            >
-              Apply Filters
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <Select
+                value={filters.type}
+                onValueChange={(val) => handleFilterChange('type', val === 'all' ? '' : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="deposit">Deposit</SelectItem>
+                  <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="airtime">Airtime</SelectItem>
+                  <SelectItem value="data">Data</SelectItem>
+                  <SelectItem value="electricity">Electricity</SelectItem>
+                  <SelectItem value="cable_tv">Cable TV</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Select
+                value={filters.status}
+                onValueChange={(val) => handleFilterChange('status', val === 'all' ? '' : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500 mt-1 block">Start Date</span>
+            </div>
+            <div>
+              <Input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500 mt-1 block">End Date</span>
+            </div>
+            <div className="lg:col-span-3">
+              <Input
+                placeholder="Filter by User ID"
+                value={filters.userId}
+                onChange={(e) => handleFilterChange('userId', e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Button onClick={() => refetch()} className="w-full h-full min-h-[40px]">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Paper sx={{ height: 600 }}>
-        <DataGrid
-          rows={transactions}
-          columns={columns}
-          paginationModel={paginationModel}
-          onPaginationModelChange={handlePageChange}
-          pageSizeOptions={[10, 25, 50, 100]}
-          rowCount={pagination?.totalItems || 0}
-          paginationMode="server"
-          loading={isLoading}
-          disableRowSelectionOnClick
-        />
-      </Paper>
-    </Box>
+      <DataTable
+        columns={columns}
+        data={transactions}
+        pageCount={paginationData ? Math.ceil(paginationData.totalItems / paginationData.itemsPerPage) : -1}
+        pagination={pagination}
+        onPaginationChange={handlePageChange}
+        isLoading={isLoading}
+      />
+    </div>
   );
 }
 

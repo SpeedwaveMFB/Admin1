@@ -1,26 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Paper,
-  Grid,
-  Alert,
-  Chip,
-  IconButton,
-} from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { Bolt, Refresh } from '@mui/icons-material';
+import { useState, useMemo } from 'react';
 import { useElectricityBills, useBillStats } from '@/lib/hooks/useTransactions';
-import { formatCurrency } from '@/lib/utils/format';
+import { formatCurrency, formatNumber } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import StatusBadge from '@/components/shared/StatusBadge';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ExportButton from '@/components/shared/ExportButton';
+import { Zap, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DataTable } from '@/components/shared/DataTable';
+import { ColumnDef, PaginationState } from '@tanstack/react-table';
 
 export default function BillsElectricityPage() {
   const [filters, setFilters] = useState({
@@ -34,101 +34,100 @@ export default function BillsElectricityPage() {
     endDate: '',
   });
 
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
     pageSize: 25,
   });
 
-  const { data, isLoading, error, refetch } = useElectricityBills(filters);
+  const { data, isLoading, error, refetch } = useElectricityBills({
+    ...filters,
+    page: pagination.pageIndex + 1,
+    limit: pagination.pageSize,
+  });
   const { data: statsData } = useBillStats();
 
-  const handlePageChange = (newModel: GridPaginationModel) => {
-    setPaginationModel(newModel);
-    setFilters((prev) => ({ ...prev, page: newModel.page + 1 }));
-  };
-
   const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const columns: GridColDef[] = [
-    {
-      field: 'serviceProvider',
-      headerName: 'Provider',
-      width: 150,
-    },
-    {
-      field: 'meterNumber',
-      headerName: 'Meter Number',
-      width: 160,
-    },
-    {
-      field: 'customerName',
-      headerName: 'Customer Name',
-      flex: 1,
-      minWidth: 160,
-    },
-    {
-      field: 'amount',
-      headerName: 'Amount',
-      width: 140,
-      renderCell: (params) => (
-        <Typography fontWeight={600}>{formatCurrency(params.value)}</Typography>
-      ),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      width: 120,
-      renderCell: (params) => <StatusBadge status={params.value} />,
-    },
-    {
-      field: 'user',
-      headerName: 'User',
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (params, row) =>
-        row.user ? `${row.user.firstName} ${row.user.lastName}` : 'N/A',
-    },
-    {
-      field: 'reference',
-      headerName: 'Reference',
-      flex: 1,
-      minWidth: 180,
-    },
-    {
-      field: 'createdAt',
-      headerName: 'Date',
-      width: 170,
-      valueGetter: (value) => formatDateTime(value),
-    },
-  ];
+  const columns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        accessorKey: 'serviceProvider',
+        header: 'Provider',
+        cell: ({ row }) => <span className="font-medium">{row.getValue('serviceProvider')}</span>,
+      },
+      {
+        accessorKey: 'meterNumber',
+        header: 'Meter Number',
+      },
+      {
+        accessorKey: 'customerName',
+        header: 'Customer Name',
+        cell: ({ row }) => <span className="text-slate-700">{row.getValue('customerName') || 'N/A'}</span>,
+      },
+      {
+        accessorKey: 'amount',
+        header: 'Amount',
+        cell: ({ row }) => (
+          <span className="font-semibold text-slate-900">{formatCurrency(row.getValue('amount'))}</span>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
+      },
+      {
+        id: 'user',
+        header: 'User',
+        cell: ({ row }) => {
+          const user = row.original.user;
+          return <span className="text-slate-700">{user ? `${user.firstName} ${user.lastName}` : 'N/A'}</span>;
+        },
+      },
+      {
+        accessorKey: 'reference',
+        header: 'Reference',
+        cell: ({ row }) => <span className="font-mono text-xs text-slate-500">{row.getValue('reference')}</span>,
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Date',
+        cell: ({ row }) => <span className="text-slate-500 whitespace-nowrap">{formatDateTime(row.getValue('createdAt'))}</span>,
+      },
+    ],
+    []
+  );
 
   const transactions = data?.data?.transactions || [];
-  const pagination = data?.data?.pagination;
+  const totalItems = data?.data?.pagination?.totalItems || 0;
   const stats = statsData?.data;
 
   const electricityStats = stats?.byType?.find((item) => item.type === 'electricity');
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Bolt />
-          <Box>
-            <Typography variant="h4" fontWeight={700} gutterBottom>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+            <Zap className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">
               Electricity Payments
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </h1>
+            <p className="text-sm text-slate-500">
               Manage all electricity bill payments across the platform
-            </Typography>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <IconButton onClick={() => refetch()} color="primary">
-            <Refresh />
-          </IconButton>
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="text-slate-600 shrink-0">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
           <ExportButton
             data={transactions}
             filename="bills-electricity"
@@ -142,143 +141,128 @@ export default function BillsElectricityPage() {
               { header: 'Date', dataKey: 'createdAt' },
             ]}
           />
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {electricityStats && (
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Electricity Txns"
-              value={electricityStats.totalCount}
-              icon={<Bolt />}
-              color="warning.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Successful"
-              value={electricityStats.successCount}
-              icon={<Chip color="success" size="small" label="OK" />}
-              color="success.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Failed"
-              value={electricityStats.failedCount}
-              icon={<Chip color="error" size="small" label="X" />}
-              color="error.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Amount"
-              value={electricityStats.totalAmount}
-              icon={<Bolt />}
-              color="warning.main"
-              format="currency"
-            />
-          </Grid>
-        </Grid>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatsCard
+            title="Total Electricity Txns"
+            value={electricityStats.totalCount}
+            icon={<Zap className="h-4 w-4 text-amber-600" />}
+            color="text-amber-600 bg-amber-50"
+          />
+          <StatsCard
+            title="Successful"
+            value={electricityStats.successCount}
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+            color="text-emerald-600 bg-emerald-50"
+          />
+          <StatsCard
+            title="Failed"
+            value={electricityStats.failedCount}
+            icon={<XCircle className="h-4 w-4 text-red-600" />}
+            color="text-red-600 bg-red-50"
+          />
+          <StatsCard
+            title="Total Amount"
+            value={electricityStats.totalAmount}
+            format="currency"
+            icon={<Zap className="h-4 w-4 text-amber-600" />}
+            color="text-amber-600 bg-amber-50"
+          />
+        </div>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Failed to load electricity transactions. Please try again.
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>Failed to load electricity transactions. Please try again.</AlertDescription>
         </Alert>
       )}
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-              <MenuItem value="failed">Failed</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Provider"
-              value={filters.provider}
-              onChange={(e) => handleFilterChange('provider', e.target.value)}
-              placeholder="e.g. IKEDC, EKEDC"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              type="date"
-              label="Start Date"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              type="date"
-              label="End Date"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Meter Number"
-              value={filters.meterNumber}
-              onChange={(e) => handleFilterChange('meterNumber', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={6}>
-            <TextField
-              fullWidth
-              label="User ID"
-              placeholder="Filter by user ID"
-              value={filters.userId}
-              onChange={(e) => handleFilterChange('userId', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{ height: '56px' }}
-              onClick={() => refetch()}
-            >
-              Apply Filters
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Card className="shadow-sm border-slate-200">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">Status</label>
+              <Select
+                value={filters.status}
+                onValueChange={(val) => handleFilterChange('status', val === 'all' ? '' : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      <Paper sx={{ height: 600 }}>
-        <DataGrid
-          rows={transactions}
-          columns={columns}
-          paginationModel={paginationModel}
-          onPaginationModelChange={handlePageChange}
-          pageSizeOptions={[10, 25, 50, 100]}
-          rowCount={pagination?.totalItems || 0}
-          paginationMode="server"
-          loading={isLoading}
-          disableRowSelectionOnClick
-          getRowId={(row) => row.id}
-        />
-      </Paper>
-    </Box>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">Provider</label>
+              <Input
+                placeholder="e.g. IKEDC, EKEDC"
+                value={filters.provider}
+                onChange={(e) => handleFilterChange('provider', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">Start Date</label>
+              <Input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">End Date</label>
+              <Input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">Meter Number</label>
+              <Input
+                placeholder="Filter by meter"
+                value={filters.meterNumber}
+                onChange={(e) => handleFilterChange('meterNumber', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5 lg:col-span-2">
+              <label className="text-xs font-medium text-slate-500">User ID</label>
+              <Input
+                placeholder="Filter by user ID"
+                value={filters.userId}
+                onChange={(e) => handleFilterChange('userId', e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-end">
+              <Button onClick={() => refetch()} className="w-full">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+
+          <DataTable
+            columns={columns}
+            data={transactions}
+            pageCount={Math.ceil(totalItems / pagination.pageSize)}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+            isLoading={isLoading}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
-

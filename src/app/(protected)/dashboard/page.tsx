@@ -1,16 +1,15 @@
 'use client';
 
-import { Grid, Typography, Box, Chip, CircularProgress, Alert } from '@mui/material';
 import {
-  UserGroupIcon, // People
-  TradeUpIcon, // Corrected from TrendingUpIcon
-  TradeDownIcon, // Corrected from TrendingDownIcon
-  Exchange01Icon, // Corrected from ArrowRightLeftIcon
-  CheckmarkCircle02Icon, // CheckCircle
-  HourglassIcon, // HourglassEmpty
-  Cancel01Icon, // Cancel
-  UserCheck01Icon, // Verified User equivalent? Or just CheckCircle
-  UserBlock01Icon, // Suspended
+  UserGroupIcon,
+  TradeUpIcon,
+  TradeDownIcon,
+  Exchange01Icon,
+  CheckmarkCircle02Icon,
+  HourglassIcon,
+  Cancel01Icon,
+  UserCheck01Icon,
+  UserBlock01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Calendar03Icon,
@@ -19,10 +18,12 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import TransactionChart from '@/components/dashboard/TransactionChart';
 import { useDashboardStats, useHealthStatus } from '@/lib/hooks/useDashboard';
 import { useTransactions } from '@/lib/hooks/useTransactions'; // New hook
-import { formatCurrency } from '@/lib/utils/format';
 import { useMemo, useState } from 'react'; // For aggregation
 import { format, subDays, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek } from 'date-fns';
-import { Button, IconButton, Paper } from '@mui/material';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const { data: statsData, isLoading: statsLoading, error: statsError } = useDashboardStats();
@@ -92,54 +93,58 @@ export default function DashboardPage() {
         transfers
       };
     });
-  }, [transactionsData]);
+  }, [transactionsData, currentWeekStart]);
 
   if (statsLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+        <p className="text-slate-500 font-medium">Loading dashboard...</p>
+      </div>
     );
   }
 
   if (statsError) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">Failed to load dashboard data. Please try again.</Alert>
-      </Box>
+      <div className="p-4">
+        <Alert variant="destructive" className="bg-red-50 text-red-700 border-red-200">
+          <AlertDescription>Failed to load dashboard data. Please try again.</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   const stats = statsData?.data;
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Dashboard
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
             Real-time overview of your platform
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           {!healthLoading && healthData?.data && (
-            <Chip
-              label={`System ${healthData.data.status.toUpperCase()}`}
-              color={healthData.data.status === 'ok' ? 'success' : 'error'}
-              size="small"
-            />
+            <Badge
+              variant="outline"
+              className={healthData.data.status === 'ok' ? 'bg-green-100 text-green-800 border-transparent font-medium' : 'bg-red-100 text-red-800 border-transparent font-medium'}
+            >
+              System {healthData.data.status.toUpperCase()}
+            </Badge>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* User Stats */}
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-        User Statistics
-      </Typography>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          User Statistics
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Users"
             value={stats?.users.total || 0}
@@ -147,39 +152,33 @@ export default function DashboardPage() {
             icon={<UserGroupIcon />}
             color="primary.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Active Users"
             value={stats?.users.active || 0}
             icon={<CheckmarkCircle02Icon />}
             color="success.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Suspended Users"
             value={stats?.users.suspended || 0}
             icon={<UserBlock01Icon />}
             color="error.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Verified Users"
             value={stats?.users.verified || 0}
             icon={<UserCheck01Icon />}
             color="info.main"
           />
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
       {/* Financial Stats */}
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-        Financial Overview
-      </Typography>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Financial Overview
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatsCard
             title="Total Deposits"
             value={stats?.financials.totalDeposits || 0}
@@ -187,8 +186,6 @@ export default function DashboardPage() {
             color="success.main"
             format="currency"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
           <StatsCard
             title="Total Withdrawals"
             value={stats?.financials.totalWithdrawals || 0}
@@ -196,8 +193,6 @@ export default function DashboardPage() {
             color="warning.main"
             format="currency"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
           <StatsCard
             title="Total Transfers"
             value={stats?.financials.totalTransfers || 0}
@@ -205,83 +200,84 @@ export default function DashboardPage() {
             color="primary.main"
             format="currency"
           />
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
       {/* Transaction Stats */}
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-        Transaction Statistics
-      </Typography>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Transaction Statistics
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Transactions"
             value={stats?.transactions.total || 0}
             icon={<Exchange01Icon />}
             color="primary.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Completed"
             value={stats?.transactions.completed || 0}
             icon={<CheckmarkCircle02Icon />}
             color="success.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Pending"
             value={stats?.transactions.pending || 0}
             icon={<HourglassIcon />}
             color="warning.main"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Failed"
             value={stats?.transactions.failed || 0}
             icon={<Cancel01Icon />}
             color="error.main"
           />
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
       {/* Transaction Chart */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6" fontWeight={600}>
-          Transaction Overview
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'background.paper', p: 0.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-          <IconButton size="small" onClick={handlePreviousWeek}>
-            <ArrowLeft01Icon size={18} />
-          </IconButton>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1 }}>
-            <Calendar03Icon size={16} color="#6B7280" />
-            <Typography variant="body2" fontWeight={500}>
-              {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-            </Typography>
-          </Box>
-
-          <IconButton size="small" onClick={handleNextWeek} disabled={isCurrentWeek}>
-            <ArrowRight01Icon size={18} color={isCurrentWeek ? '#E5E7EB' : 'inherit'} />
-          </IconButton>
-
-          {!isCurrentWeek && (
-            <Button
-              size="small"
-              variant="text"
-              onClick={handleResetToCurrent}
-              sx={{ minWidth: 'auto', ml: 1, textTransform: 'none', fontSize: '0.75rem' }}
-            >
-              Reset
+      <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+          <h2 className="text-lg font-semibold text-slate-800">
+            Transaction Overview
+          </h2>
+          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900" onClick={handlePreviousWeek}>
+              <ArrowLeft01Icon size={18} />
             </Button>
-          )}
-        </Box>
-      </Box>
-      <TransactionChart data={chartData} />
-    </Box>
+
+            <div className="flex items-center gap-2 px-2 text-slate-600">
+              <Calendar03Icon size={16} />
+              <span className="text-sm font-medium">
+                {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
+              </span>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-slate-500 hover:text-slate-900 disabled:opacity-30"
+              onClick={handleNextWeek}
+              disabled={isCurrentWeek}
+            >
+              <ArrowRight01Icon size={18} />
+            </Button>
+
+            {!isCurrentWeek && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetToCurrent}
+                className="ml-1 h-8 px-2 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                Reset
+              </Button>
+            )}
+          </div>
+        </div>
+        <TransactionChart data={chartData} />
+      </div>
+    </div>
   );
 }
-

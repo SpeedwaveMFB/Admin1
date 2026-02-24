@@ -1,11 +1,13 @@
 'use client';
 
-import { Box, Typography, Grid, Card, CardContent, CardActionArea, IconButton, Alert } from '@mui/material';
-import { Phone, Bolt, Tv, Refresh } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import StatsCard from '@/components/dashboard/StatsCard';
 import { useBillStats } from '@/lib/hooks/useTransactions';
-import { formatCurrency } from '@/lib/utils/format';
+import { formatCurrency, formatNumber } from '@/lib/utils/format';
+import { Phone, Zap, Tv, RefreshCw, XCircle, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import StatsCard from '@/components/dashboard/StatsCard';
 
 export default function BillsPage() {
   const router = useRouter();
@@ -18,155 +20,140 @@ export default function BillsPage() {
     {
       title: 'Airtime',
       description: 'View and manage airtime purchases',
-      icon: <Phone />,
+      icon: <Phone className="w-6 h-6" />,
       path: '/bills/airtime',
-      color: 'primary',
+      bgColor: 'bg-blue-100 text-blue-700',
+      iconBg: 'bg-blue-600',
       typeKey: 'airtime',
     },
     {
       title: 'Data',
       description: 'View and manage data bundles',
-      icon: <Phone />,
+      icon: <Phone className="w-6 h-6" />,
       path: '/bills/data',
-      color: 'primary',
+      bgColor: 'bg-indigo-100 text-indigo-700',
+      iconBg: 'bg-indigo-600',
       typeKey: 'data',
     },
     {
       title: 'Electricity',
       description: 'Manage electricity bill payments',
-      icon: <Bolt />,
+      icon: <Zap className="w-6 h-6" />,
       path: '/bills/electricity',
-      color: 'warning',
+      bgColor: 'bg-amber-100 text-amber-700',
+      iconBg: 'bg-amber-500',
       typeKey: 'electricity',
     },
     {
       title: 'Cable TV',
       description: 'Manage cable TV subscriptions',
-      icon: <Tv />,
+      icon: <Tv className="w-6 h-6" />,
       path: '/bills/cable',
-      color: 'secondary',
+      bgColor: 'bg-violet-100 text-violet-700',
+      iconBg: 'bg-violet-600',
       typeKey: 'cable_tv',
     },
   ] as const;
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">
             Bill Payments
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </h1>
+          <p className="text-sm text-slate-500">
             Monitor airtime, data, electricity, and cable bill transactions
-          </Typography>
-        </Box>
-        <IconButton onClick={() => refetch()} color="primary">
-          <Refresh />
-        </IconButton>
-      </Box>
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="text-slate-600 shrink-0">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
 
       {stats && (
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Bill Txns"
-              value={stats.summary.totalTransactions}
-              subtitle={`${stats.summary.totalSuccessful} successful`}
-              color="primary.main"
-              icon={<Phone />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Revenue"
-              value={stats.summary.totalRevenue}
-              color="success.main"
-              format="currency"
-              icon={<Bolt />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Failed Transactions"
-              value={stats.summary.totalFailed}
-              color="error.main"
-              icon={<Tv />}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Pending Transactions"
-              value={stats.summary.totalPending}
-              color="warning.main"
-              icon={<Tv />}
-            />
-          </Grid>
-        </Grid>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatsCard
+            title="Total Bill Txns"
+            value={stats.summary.totalTransactions}
+            subtitle={`${stats.summary.totalSuccessful} successful`}
+            icon={<Phone className="h-4 w-4 text-blue-600" />}
+            color="text-blue-600 bg-blue-50"
+          />
+          <StatsCard
+            title="Total Revenue"
+            value={stats.summary.totalRevenue}
+            format="currency"
+            icon={<Zap className="h-4 w-4 text-emerald-600" />}
+            color="text-emerald-600 bg-emerald-50"
+          />
+          <StatsCard
+            title="Failed Transactions"
+            value={stats.summary.totalFailed}
+            icon={<XCircle className="h-4 w-4 text-red-600" />}
+            color="text-red-600 bg-red-50"
+          />
+          <StatsCard
+            title="Pending Transactions"
+            value={stats.summary.totalPending}
+            icon={<Clock className="h-4 w-4 text-amber-600" />}
+            color="text-amber-600 bg-amber-50"
+          />
+        </div>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Failed to load bill payment statistics. Please try again.
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>Failed to load bill payment statistics. Please try again.</AlertDescription>
         </Alert>
       )}
 
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+      <h2 className="text-xl font-semibold text-slate-900 mb-4 mt-8">
         Bill Types
-      </Typography>
-      <Grid container spacing={3}>
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {billTypes.map((bill) => {
           const typeStats = byType.find((t) => t.type === bill.typeKey);
 
           return (
-            <Grid item xs={12} sm={6} md={3} key={bill.path}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardActionArea
-                  onClick={() => router.push(bill.path)}
-                  sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-                >
-                  <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                    <Box
-                      sx={{
-                        display: 'inline-flex',
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: `${bill.color}.main`,
-                        color: 'white',
-                        mb: 2,
-                      }}
-                    >
-                      {bill.icon}
-                    </Box>
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      {bill.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {bill.description}
-                    </Typography>
-                    {typeStats && (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        <Typography variant="body2">
-                          Total: <strong>{typeStats.totalCount}</strong>
-                        </Typography>
-                        <Typography variant="body2" color="success.main">
-                          Successful: <strong>{typeStats.successCount}</strong>
-                        </Typography>
-                        <Typography variant="body2" color="error.main">
-                          Failed: <strong>{typeStats.failedCount}</strong>
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Volume: <strong>{formatCurrency(typeStats.totalAmount)}</strong>
-                        </Typography>
-                      </Box>
-                    )}
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
+            <div
+              key={bill.path}
+              onClick={() => router.push(bill.path)}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group flex flex-col h-full"
+            >
+              <div className="p-6 flex-grow flex flex-col justify-center items-center text-center">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-4 shadow-sm group-hover:scale-105 transition-transform ${bill.iconBg}`}>
+                  {bill.icon}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-1">{bill.title}</h3>
+                <p className="text-sm text-slate-500 mb-4">{bill.description}</p>
+
+                {typeStats && (
+                  <div className="w-full mt-auto pt-4 border-t border-slate-100 flex flex-col gap-1.5 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Total:</span>
+                      <span className="font-semibold text-slate-900">{formatNumber(typeStats.totalCount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Successful:</span>
+                      <span className="font-semibold text-emerald-600">{formatNumber(typeStats.successCount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Failed:</span>
+                      <span className="font-semibold text-red-600">{formatNumber(typeStats.failedCount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-50">
+                      <span className="text-slate-500 font-medium">Volume:</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(typeStats.totalAmount)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           );
         })}
-      </Grid>
-    </Box>
+      </div>
+    </div>
   );
 }
-

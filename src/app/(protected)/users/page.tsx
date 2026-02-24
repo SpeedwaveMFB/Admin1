@@ -2,21 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Paper,
-  Grid,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Chip,
-} from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { Visibility, Refresh } from '@mui/icons-material';
+import { ColumnDef } from '@tanstack/react-table';
+import { RefreshCcw, Eye } from 'lucide-react';
 import { useUsers, useUpdateUserStatus } from '@/lib/hooks/useUsers';
 import StatusBadge from '@/components/shared/StatusBadge';
 import ExportButton from '@/components/shared/ExportButton';
@@ -24,6 +11,18 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDate } from '@/lib/utils/date';
 import { User } from '@/types/user';
+import { DataTable } from '@/components/shared/DataTable';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -35,17 +34,12 @@ export default function UsersPage() {
     verified: undefined as boolean | undefined,
   });
 
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
     pageSize: 25,
   });
 
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    userId: string;
-    action: string;
-    status: string;
-  }>({
+  const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     userId: '',
     action: '',
@@ -55,14 +49,15 @@ export default function UsersPage() {
   const { data, isLoading, error, refetch } = useUsers(filters);
   const updateStatusMutation = useUpdateUserStatus();
 
-  const handlePageChange = (newModel: GridPaginationModel) => {
-    setPaginationModel(newModel);
-    setFilters((prev) => ({ ...prev, page: newModel.page + 1 }));
+  const handlePageChange = (updaterOrValue: any) => {
+    setPagination(updaterOrValue);
+    const newPageIndex = typeof updaterOrValue === 'function' ? updaterOrValue(pagination).pageIndex : updaterOrValue.pageIndex;
+    setFilters((prev) => ({ ...prev, page: newPageIndex + 1 }));
   };
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
   const handleStatusChange = (userId: string, newStatus: string) => {
@@ -86,144 +81,96 @@ export default function UsersPage() {
     }
   };
 
-  const columns: GridColDef[] = [
+  const columns: ColumnDef<User>[] = [
     {
-      field: 'name',
-      headerName: 'Name',
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (params, row) => `${row.firstName} ${row.lastName}`,
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
     },
     {
-      field: 'email',
-      headerName: 'Email',
-      flex: 1,
-      minWidth: 200,
+      accessorKey: 'email',
+      header: 'Email',
     },
     {
-      field: 'balance',
-      headerName: 'Balance',
-      width: 140,
-      renderCell: (params) => formatCurrency(params.value),
+      accessorKey: 'balance',
+      header: 'Balance',
+      cell: ({ row }) => <span className="font-medium">{formatCurrency(row.original.balance)}</span>,
     },
     {
-      field: 'accountStatus',
-      headerName: 'Status',
-      width: 120,
-      renderCell: (params) => <StatusBadge status={params.value} type="user" />,
+      accessorKey: 'accountStatus',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.accountStatus} type="user" />,
     },
     {
-      field: 'isVerified',
-      headerName: 'Verified',
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          size="small"
-          color={params.value ? 'success' : 'default'}
-        />
+      accessorKey: 'isVerified',
+      header: 'Verified',
+      cell: ({ row }) => (
+        <Badge variant={row.original.isVerified ? 'default' : 'secondary'} className={row.original.isVerified ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}>
+          {row.original.isVerified ? 'Yes' : 'No'}
+        </Badge>
       ),
     },
     {
-      field: 'speedwaveId',
-      headerName: 'Speedwave ID',
-      width: 140,
+      accessorKey: 'speedwaveId',
+      header: 'Speedwave ID',
     },
     {
-      field: 'createdAt',
-      headerName: 'Joined',
-      width: 120,
-      valueGetter: (value) => formatDate(value),
+      accessorKey: 'createdAt',
+      header: 'Joined',
+      cell: ({ row }) => formatDate(row.original.createdAt),
     },
     {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 220,
-      sortable: false,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%',
-            mx: 'auto',
-          }}
-        >
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
           <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Visibility />}
-            sx={{
-              borderRadius: 999,
-              px: 2.5,
-              textTransform: 'none',
-              fontWeight: 500,
-            }}
-            onClick={() => router.push(`/users/${params.row.id}`)}
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/users/${row.original.id}`)}
           >
+            <Eye className="w-4 h-4 mr-1" />
             View
           </Button>
-          {params.row.accountStatus === 'active' ? (
+          {row.original.accountStatus === 'active' ? (
             <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              sx={{
-                borderRadius: 999,
-                px: 2.5,
-                textTransform: 'none',
-                fontWeight: 500,
-                borderColor: 'error.main',
-              }}
-              onClick={() => handleStatusChange(params.row.id, 'suspended')}
+              variant="destructive"
+              size="sm"
+              onClick={() => handleStatusChange(row.original.id, 'suspended')}
             >
               Suspend
             </Button>
           ) : (
             <Button
-              size="small"
-              variant="outlined"
-              color="success"
-              sx={{
-                borderRadius: 999,
-                px: 2.5,
-                textTransform: 'none',
-                fontWeight: 500,
-                borderColor: 'success.main',
-              }}
-              onClick={() => handleStatusChange(params.row.id, 'active')}
+              variant="outline"
+              size="sm"
+              className="border-green-600 text-green-600 hover:bg-green-50"
+              onClick={() => handleStatusChange(row.original.id, 'active')}
             >
               Activate
             </Button>
           )}
-        </Box>
+        </div>
       ),
-      align: 'center',
-      headerAlign: 'center',
     },
   ];
 
   const users = data?.data?.users || [];
-  const pagination = data?.data?.pagination;
+  const paginationData = data?.data?.pagination;
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Users Management
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Users Management</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Manage user accounts and permissions
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <IconButton onClick={() => refetch()} color="primary">
-            <Refresh />
-          </IconButton>
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => refetch()}>
+            <RefreshCcw className="w-4 h-4 text-slate-600" />
+          </Button>
           <ExportButton
             data={users}
             filename="users"
@@ -234,84 +181,79 @@ export default function UsersPage() {
               { header: 'Status', dataKey: 'accountStatus' },
             ]}
           />
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <div className="bg-red-50 text-red-700 p-4 rounded-md text-sm">
           Failed to load users. Please try again.
-        </Alert>
+        </div>
       )}
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              fullWidth
-              label="Search"
-              placeholder="Search by name, email, or Speedwave ID"
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="suspended">Suspended</MenuItem>
-              <MenuItem value="closed">Closed</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Verification"
-              value={filters.verified === undefined ? '' : filters.verified.toString()}
-              onChange={(e) =>
-                handleFilterChange(
-                  'verified',
-                  e.target.value === '' ? undefined : e.target.value === 'true'
-                )
-              }
-            >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="true">Verified</MenuItem>
-              <MenuItem value="false">Unverified</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{ height: '56px' }}
-              onClick={() => refetch()}
-            >
-              Apply Filters
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-2">
+              <Input
+                placeholder="Search by name, email, or Speedwave ID"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Select
+                value={filters.status}
+                onValueChange={(val) => handleFilterChange('status', val === 'all' ? '' : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Select
+                value={filters.verified === undefined ? 'all' : filters.verified.toString()}
+                onValueChange={(val) =>
+                  handleFilterChange(
+                    'verified',
+                    val === 'all' ? undefined : val === 'true'
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Verification: All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Verification: All</SelectItem>
+                  <SelectItem value="true">Verified</SelectItem>
+                  <SelectItem value="false">Unverified</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Button onClick={() => refetch()} className="w-full">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Paper sx={{ height: 600 }}>
-        <DataGrid
-          rows={users}
-          columns={columns}
-          paginationModel={paginationModel}
-          onPaginationModelChange={handlePageChange}
-          pageSizeOptions={[10, 25, 50, 100]}
-          rowCount={pagination?.totalItems || 0}
-          paginationMode="server"
-          loading={isLoading}
-          disableRowSelectionOnClick
-        />
-      </Paper>
+      <DataTable
+        columns={columns}
+        data={users}
+        pageCount={paginationData ? Math.ceil(paginationData.totalItems / paginationData.itemsPerPage) : -1}
+        pagination={pagination}
+        onPaginationChange={handlePageChange}
+        isLoading={isLoading}
+      />
 
       <ConfirmDialog
         open={confirmDialog.open}
@@ -321,7 +263,7 @@ export default function UsersPage() {
         onCancel={() => setConfirmDialog({ open: false, userId: '', action: '', status: '' })}
         severity={confirmDialog.action === 'Suspend' ? 'warning' : 'info'}
       />
-    </Box>
+    </div>
   );
 }
 

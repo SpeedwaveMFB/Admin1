@@ -2,25 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff, Lock } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { loginSchema } from '@/lib/utils/validation';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { ApiResponse } from '@/types/api';
+import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface LoginFormData {
   email: string;
@@ -82,101 +74,89 @@ export default function LoginPage() {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 440, px: 2 }}>
-      <Card elevation={3}>
-        <CardContent sx={{ p: 4 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              mb: 3,
-            }}
-          >
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: 2,
-                backgroundColor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 2,
-              }}
-            >
-              <Lock sx={{ fontSize: 32, color: 'white' }} />
-            </Box>
-            <Typography variant="h5" fontWeight={700} gutterBottom>
+    <div className="w-full max-w-[440px] px-4">
+      <Card className="shadow-lg border-slate-200">
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-sm">
+              <Lock className="text-white w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
               Speedwave Admin
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </h1>
+            <p className="text-sm text-slate-500">
               Sign in to access the admin portal
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
+            <Alert variant="destructive" className="mb-6 bg-red-50 text-red-700 border-red-200">
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              {...register('email')}
-              label="Email Address"
-              type="email"
-              fullWidth
-              margin="normal"
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              disabled={isLoading}
-              autoComplete="email"
-            />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                disabled={isLoading}
+                {...register('email')}
+                className={errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}
+              />
+              {errors.email && (
+                <p className="text-sm font-medium text-red-500">{errors.email.message}</p>
+              )}
+            </div>
 
-            <TextField
-              {...register('password')}
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              fullWidth
-              margin="normal"
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              disabled={isLoading}
-              autoComplete="current-password"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                  {...register('password')}
+                  className={errors.password ? 'border-red-500 focus-visible:ring-red-500 pr-10' : 'pr-10'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-0 h-full px-3 py-2 text-slate-400 hover:text-slate-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm font-medium text-red-500">{errors.password.message}</p>
+              )}
+            </div>
 
             <Button
               type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
+              className="w-full mt-6 h-11 text-base bg-blue-600 hover:bg-blue-700 font-medium"
               disabled={isLoading}
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
             >
-              {isLoading ? <CircularProgress size={24} /> : 'Sign In'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
-
-
-
-
-
-

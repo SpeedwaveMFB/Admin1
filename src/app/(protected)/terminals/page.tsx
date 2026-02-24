@@ -2,58 +2,60 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-    Box,
-    Typography,
-    Card,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Chip,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    CircularProgress,
-    Alert
-} from '@mui/material';
 import { terminalsApi, TerminalRequest } from '@/lib/api/terminals';
 import dayjs from 'dayjs';
+import { Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function TerminalsPage() {
-    const queryClient = useQueryClient();
-    const [assignModalOpen, setAssignModalOpen] = useState(false);
-    const [selectedRequest, setSelectedRequest] = useState<TerminalRequest | null>(null);
-    const [serialNumber, setSerialNumber] = useState('');
-    const [terminalLabel, setTerminalLabel] = useState('');
-    const [assignError, setAssignError] = useState('');
+  const queryClient = useQueryClient();
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<TerminalRequest | null>(null);
+  const [serialNumber, setSerialNumber] = useState('');
+  const [terminalLabel, setTerminalLabel] = useState('');
+  const [assignError, setAssignError] = useState('');
 
-    const { data: requests, isLoading, error } = useQuery({
-        queryKey: ['terminalRequests'],
-        queryFn: terminalsApi.getRequests,
-    });
+  const { data: requests, isLoading, error } = useQuery({
+    queryKey: ['terminalRequests'],
+    queryFn: terminalsApi.getRequests,
+  });
 
-    const assignMutation = useMutation({
-        mutationFn: (data: { requestId: number; serial: string; label: string }) =>
-            terminalsApi.assignTerminal(data.requestId, data.serial, data.label),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['terminalRequests'] });
-            handleCloseModal();
-        },
-        onError: (err: any) => {
-            setAssignError(err.response?.data?.message || err.message || 'Failed to assign terminal');
-        }
-    });
+  const assignMutation = useMutation({
+    mutationFn: (data: { requestId: number; serial: string; label: string }) =>
+      terminalsApi.assignTerminal(data.requestId, data.serial, data.label),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['terminalRequests'] });
+      handleCloseModal();
+    },
+    onError: (err: any) => {
+      setAssignError(err.response?.data?.message || err.message || 'Failed to assign terminal');
+    }
+  });
 
-    const handleOpenAssignModal = (request: TerminalRequest) => {
-        setSelectedRequest(request);
-        setSerialNumber('');
-        setTerminalLabel(\`\${request.business_name} POS\`);
+  const handleOpenAssignModal = (request: TerminalRequest) => {
+    setSelectedRequest(request);
+    setSerialNumber('');
+    setTerminalLabel(`${request.business_name} POS`);
     setAssignError('');
     setAssignModalOpen(true);
   };
@@ -77,97 +79,110 @@ export default function TerminalsPage() {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center mt-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ mt: 4 }}>
-        <Alert severity="error">Failed to load terminal requests</Alert>
-      </Box>
+      <div className="mt-8">
+        <Alert variant="destructive">
+          <AlertDescription>Failed to load terminal requests</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
-        POS Terminal Requests
-      </Typography>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">
+          POS Terminal Requests
+        </h1>
+        <p className="text-sm text-slate-500">
+          Manage and assign point-of-sale terminals
+        </p>
+      </div>
 
-      <Card>
-        <TableContainer>
+      <Card className="shadow-sm border-slate-200">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>User</TableCell>
-                <TableCell>Business Info</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Assigned Serial / Label</TableCell>
-                <TableCell align="right">Actions</TableCell>
+            <TableHeader className="bg-slate-50">
+              <TableRow className="border-b border-slate-200">
+                <TableHead className="py-4 text-slate-600 font-semibold">Date</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">User</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Business Info</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Status</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Assigned Serial / Label</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold text-right">Actions</TableHead>
               </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
               {requests?.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell>
+                <TableRow key={req.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="py-4 text-sm text-slate-600">
                     {dayjs(req.created_at).format('MMM D, YYYY h:mm A')}
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
+                  <TableCell className="py-4">
+                    <p className="font-semibold text-slate-900 text-sm">
                       {req.first_name} {req.last_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </p>
+                    <p className="text-xs text-slate-500">
                       {req.email}
-                    </Typography>
+                    </p>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
+                  <TableCell className="py-4">
+                    <p className="font-semibold text-slate-900 text-sm">
                       {req.business_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
+                    </p>
+                    <p className="text-xs text-slate-500 block">
                       {req.business_address}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </p>
+                    <p className="text-xs text-slate-500">
                       {req.contact_phone}
-                    </Typography>
+                    </p>
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={req.status.toUpperCase()}
-                      color={
+                  <TableCell className="py-4">
+                    <Badge
+                      variant={
                         req.status === 'assigned'
-                          ? 'success'
+                          ? 'default'
                           : req.status === 'rejected'
-                          ? 'error'
-                          : 'warning'
+                            ? 'destructive'
+                            : 'secondary'
                       }
-                      size="small"
-                    />
+                      className={
+                        req.status === 'assigned'
+                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none'
+                          : req.status === 'pending'
+                            ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 border-none'
+                            : ''
+                      }
+                    >
+                      {req.status.toUpperCase()}
+                    </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     {req.terminal_serial_number ? (
-                      <Typography variant="body2">
-                        {req.terminal_serial_number}
+                      <div className="text-sm">
+                        <span className="text-slate-900 font-medium">{req.terminal_serial_number}</span>
                         <br />
-                        <Typography variant="caption" color="text.secondary">
+                        <span className="text-xs text-slate-500">
                           ({req.terminal_label})
-                        </Typography>
-                      </Typography>
+                        </span>
+                      </div>
                     ) : (
-                      <Typography variant="caption" color="text.secondary">
+                      <span className="text-xs text-slate-400">
                         None
-                      </Typography>
+                      </span>
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell className="py-4 text-right">
                     {req.status === 'pending' && (
                       <Button
-                        variant="contained"
-                        size="small"
+                        size="sm"
                         onClick={() => handleOpenAssignModal(req)}
                       >
                         Assign
@@ -178,60 +193,74 @@ export default function TerminalsPage() {
               ))}
               {requests?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                  <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                     No terminal requests found.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </CardContent>
       </Card>
 
-      <Dialog open={assignModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <form onSubmit={handleAssignSubmit}>
-          <DialogTitle>Assign Terminal</DialogTitle>
-          <DialogContent>
-            {assignError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {assignError}
-              </Alert>
-            )}
-            <Typography variant="body2" sx={{ mb: 3 }}>
-              Assigning POS Terminal to{' '}
-              <strong>{selectedRequest?.business_name}</strong>
-            </Typography>
+      <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleAssignSubmit}>
+            <DialogHeader>
+              <DialogTitle>Assign Terminal</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {assignError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{assignError}</AlertDescription>
+                </Alert>
+              )}
+              <p className="text-sm text-slate-600 mb-2">
+                Assigning POS Terminal to{' '}
+                <strong className="text-slate-900">{selectedRequest?.business_name}</strong>
+              </p>
 
-            <TextField
-              label="Terminal Serial Number"
-              fullWidth
-              required
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Terminal Label"
-              fullWidth
-              value={terminalLabel}
-              onChange={(e) => setTerminalLabel(e.target.value)}
-              helperText="A friendly name for this terminal in Nomba"
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseModal} disabled={assignMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={!serialNumber || assignMutation.isPending}
-            >
-              {assignMutation.isPending ? 'Assigning...' : 'Assign Terminal'}
-            </Button>
-          </DialogActions>
-        </form>
+              <div className="space-y-2">
+                <Label htmlFor="serialNumber">Terminal Serial Number *</Label>
+                <Input
+                  id="serialNumber"
+                  required
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="terminalLabel">Terminal Label</Label>
+                <Input
+                  id="terminalLabel"
+                  value={terminalLabel}
+                  onChange={(e) => setTerminalLabel(e.target.value)}
+                  placeholder="e.g. Speedwave POS 1"
+                />
+                <p className="text-xs text-slate-500">
+                  A friendly name for this terminal in Nomba
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseModal} disabled={assignMutation.isPending}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!serialNumber || assignMutation.isPending}>
+                {assignMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Assigning...
+                  </>
+                ) : (
+                  'Assign Terminal'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
 }

@@ -1,37 +1,41 @@
 'use client';
 
-import { Box, Typography, Paper, Alert } from '@mui/material';
-import { History } from '@mui/icons-material';
+import { History } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function AuditLogsPage() {
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <History />
-        <Typography variant="h4" fontWeight={700}>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-slate-100 text-slate-600 rounded-lg">
+          <History className="w-6 h-6" />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           Audit Logs
-        </Typography>
-      </Box>
-      <Paper sx={{ p: 4 }}>
-        <Alert severity="info">
-          Audit logs will be available once the backend endpoints are ready.
-        </Alert>
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          This page will display all admin activity logs including:
-        </Typography>
-        <ul style={{ marginTop: '1rem', paddingLeft: '1.5rem' }}>
-          <li>User actions (suspensions, verifications, balance adjustments)</li>
-          <li>System events</li>
-          <li>Admin activity history</li>
-          <li>Searchable and filterable logs</li>
-        </ul>
-      </Paper>
-    </Box>
+        </h1>
+      </div>
+
+      <Card className="shadow-sm border-slate-200">
+        <CardContent className="pt-6">
+          <Alert className="bg-blue-50 text-blue-700 border-blue-200 mb-6">
+            <AlertDescription>
+              Audit logs will be available once the backend endpoints are ready.
+            </AlertDescription>
+          </Alert>
+          <div className="space-y-4">
+            <p className="text-slate-700 font-medium">
+              This page will display all admin activity logs including:
+            </p>
+            <ul className="list-disc pl-6 text-sm text-slate-600 space-y-2 marker:text-slate-400">
+              <li>User actions (suspensions, verifications, balance adjustments)</li>
+              <li>System events</li>
+              <li>Admin activity history</li>
+              <li>Searchable and filterable logs</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
-
-
-
-
-
-
