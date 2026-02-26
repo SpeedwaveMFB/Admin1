@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -78,8 +80,8 @@ export default function LoginPage() {
       <Card className="shadow-lg border-slate-200">
         <CardContent className="p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center mb-4 shadow-sm">
-              <Lock className="text-white w-8 h-8" />
+            <div className="flex justify-center mb-6 w-full">
+              <Image src="/logo.png" alt="Speedwave Logo" width={200} height={60} className="w-auto h-12" priority />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
               Speedwave Admin

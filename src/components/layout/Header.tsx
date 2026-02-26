@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { LogOut, User as UserIcon } from 'lucide-react';
@@ -38,9 +40,9 @@ export default function Header() {
     <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-bold text-slate-800 tracking-tight md:hidden">
-            Speedwave admin
-          </h2>
+          <div className="md:hidden">
+            <Image src="/logo.png" alt="Speedwave Logo" width={140} height={32} className="w-auto h-7" priority />
+          </div>
           {/* Add a breadcrumb or page title here in the future if desired */}
         </div>
 

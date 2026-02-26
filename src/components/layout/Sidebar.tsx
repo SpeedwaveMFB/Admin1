@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -56,10 +58,8 @@ export default function Sidebar() {
       className="hidden md:flex flex-col flex-shrink-0 bg-white border-r border-slate-200 h-screen sticky top-0"
       style={{ width: DRAWER_WIDTH }}
     >
-      <div className="flex items-center min-h-[80px] px-6">
-        <h1 className="text-xl font-extrabold text-purple-600 tracking-tight">
-          Speedwave
-        </h1>
+      <div className="flex items-center min-h-[80px] px-6 pt-4 pb-2">
+        <Image src="/logo.png" alt="Speedwave Logo" width={160} height={40} className="w-auto h-9" priority />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
