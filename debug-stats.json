@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "message": "Transaction statistics retrieved successfully",
+  "data": {
+    "stats": [
+      {
+        "type": "airtime",
+        "count": 4,
+        "total_amount": "800.00"
+      },
+      {
+        "type": "data",
+        "count": 4,
+        "total_amount": "1000.00"
+      },
+      {
+        "type": "deposit",
+        "count": 21,
+        "total_amount": "165900.00"
+      }
+    ]
+  }
+}
