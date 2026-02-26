@@ -22,8 +22,8 @@ export default function BillsPage() {
       description: 'View and manage airtime purchases',
       icon: <Phone className="w-6 h-6" />,
       path: '/bills/airtime',
-      bgColor: 'bg-blue-100 text-blue-700',
-      iconBg: 'bg-blue-600',
+      bgColor: 'bg-purple-100 text-purple-700',
+      iconBg: 'bg-purple-600',
       typeKey: 'airtime',
     },
     {
@@ -78,8 +78,8 @@ export default function BillsPage() {
             title="Total Bill Txns"
             value={stats.summary.totalTransactions}
             subtitle={`${stats.summary.totalSuccessful} successful`}
-            icon={<Phone className="h-4 w-4 text-blue-600" />}
-            color="text-blue-600 bg-blue-50"
+            icon={<Phone className="h-4 w-4 text-purple-600" />}
+            color="text-purple-600 bg-purple-50"
           />
           <StatsCard
             title="Total Revenue"

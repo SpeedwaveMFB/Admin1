@@ -67,7 +67,7 @@ export default function ProfilePage() {
         <Card className="shadow-sm border-slate-200 h-fit">
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="flex items-center gap-3 text-lg font-semibold text-slate-800">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                 <User className="w-5 h-5" />
               </div>
               Profile Information
@@ -121,7 +121,7 @@ export default function ProfilePage() {
               </Alert>
             )}
 
-            <Alert className="bg-blue-50 text-blue-700 border-blue-200">
+            <Alert className="bg-purple-50 text-purple-700 border-purple-200">
               <AlertDescription>
                 Password change functionality will be available once the backend endpoint is ready.
               </AlertDescription>

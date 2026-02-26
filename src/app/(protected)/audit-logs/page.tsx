@@ -18,7 +18,7 @@ export default function AuditLogsPage() {
 
       <Card className="shadow-sm border-slate-200">
         <CardContent className="pt-6">
-          <Alert className="bg-blue-50 text-blue-700 border-blue-200 mb-6">
+          <Alert className="bg-purple-50 text-purple-700 border-purple-200 mb-6">
             <AlertDescription>
               Audit logs will be available once the backend endpoints are ready.
             </AlertDescription>

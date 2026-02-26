@@ -34,10 +34,10 @@ export default function StatsCard({
       case 'success.main': return { text: 'text-green-600', bg: 'bg-green-100' };
       case 'warning.main': return { text: 'text-yellow-600', bg: 'bg-yellow-100' };
       case 'error.main': return { text: 'text-red-600', bg: 'bg-red-100' };
-      case 'info.main': return { text: 'text-blue-600', bg: 'bg-blue-100' };
+      case 'info.main': return { text: 'text-purple-600', bg: 'bg-purple-100' };
       case 'primary.main':
       default:
-        return { text: 'text-blue-700', bg: 'bg-blue-50' };
+        return { text: 'text-purple-700', bg: 'bg-purple-50' };
     }
   };
 

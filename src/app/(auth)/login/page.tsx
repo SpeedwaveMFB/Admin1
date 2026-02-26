@@ -78,7 +78,7 @@ export default function LoginPage() {
       <Card className="shadow-lg border-slate-200">
         <CardContent className="p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center mb-4 shadow-sm">
               <Lock className="text-white w-8 h-8" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
@@ -142,7 +142,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full mt-6 h-11 text-base bg-blue-600 hover:bg-blue-700 font-medium"
+              className="w-full mt-6 h-11 text-base bg-purple-600 hover:bg-purple-700 font-medium"
               disabled={isLoading}
             >
               {isLoading ? (

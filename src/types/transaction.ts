@@ -39,12 +39,11 @@ export interface TransactionFilters {
 }
 
 export interface TransactionStats {
-  totalDeposits: number;
-  totalWithdrawals: number;
-  totalTransfers: number;
-  pendingTransactions: number;
-  completedTransactions: number;
-  failedTransactions: number;
+  stats: {
+    type: string;
+    count: number;
+    total_amount: string | number;
+  }[];
 }
 
 export interface BillUser {

@@ -175,46 +175,36 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {stats && (
+      {stats && stats.stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatsCard
             title="Total Deposits"
-            value={stats.totalDeposits}
+            value={stats.stats.find(s => s.type === 'deposit')?.total_amount || 0}
+            subtitle={`${stats.stats.find(s => s.type === 'deposit')?.count || 0} transactions`}
             icon={<TradeUpIcon />}
             color="success.main"
             format="currency"
           />
           <StatsCard
             title="Total Withdrawals"
-            value={stats.totalWithdrawals}
+            value={stats.stats.find(s => s.type === 'withdrawal')?.total_amount || 0}
+            subtitle={`${stats.stats.find(s => s.type === 'withdrawal')?.count || 0} transactions`}
             icon={<TradeDownIcon />}
             color="warning.main"
             format="currency"
           />
           <StatsCard
             title="Total Transfers"
-            value={stats.totalTransfers}
+            value={
+              (Number(stats.stats.find(s => s.type === 'transfer')?.total_amount || 0) +
+                Number(stats.stats.find(s => s.type === 'bank_transfer')?.total_amount || 0)) || 0
+            }
+            subtitle={`${(stats.stats.find(s => s.type === 'transfer')?.count || 0) +
+              (stats.stats.find(s => s.type === 'bank_transfer')?.count || 0)
+              } transactions`}
             icon={<Exchange01Icon />}
             color="primary.main"
             format="currency"
-          />
-          <StatsCard
-            title="Pending"
-            value={stats.pendingTransactions}
-            icon={<HourglassIcon />}
-            color="warning.main"
-          />
-          <StatsCard
-            title="Completed"
-            value={stats.completedTransactions}
-            icon={<CheckmarkCircle02Icon />}
-            color="success.main"
-          />
-          <StatsCard
-            title="Failed"
-            value={stats.failedTransactions}
-            icon={<Cancel01Icon />}
-            color="error.main"
           />
         </div>
       )}

@@ -60,7 +60,7 @@ export default function DocumentViewer({
       {/* Document Type Indicator */}
       <div className="flex items-center gap-2 mb-3">
         {documentType === 'image' ? (
-          <ImageIcon className="h-4 w-4 text-blue-600" />
+          <ImageIcon className="h-4 w-4 text-purple-600" />
         ) : (
           <FileText className="h-4 w-4 text-red-600" />
         )}
@@ -75,7 +75,7 @@ export default function DocumentViewer({
           <div className="relative flex justify-center bg-slate-50 min-h-[200px] rounded-lg border border-slate-100 p-2">
             {imageLoading && !imageError && (
               <div className="absolute inset-0 flex justify-center items-center bg-transparent">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               </div>
             )}
             {imageError ? (
@@ -102,7 +102,7 @@ export default function DocumentViewer({
           <div className="relative rounded-lg border border-slate-100 overflow-hidden bg-slate-50">
             {pdfLoading && (
               <div className="absolute inset-0 flex justify-center items-center bg-white z-10">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               </div>
             )}
             <iframe

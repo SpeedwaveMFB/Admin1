@@ -155,7 +155,7 @@ export default function KYCPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               onClick={() => setSelectedUserId(row.original.id)}
               title="View Details"
             >
@@ -197,7 +197,7 @@ export default function KYCPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+          <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
             <BadgeCheck className="h-6 w-6" />
           </div>
           <div>
@@ -229,13 +229,13 @@ export default function KYCPage() {
             <TabsList className="bg-transparent h-auto p-0">
               <TabsTrigger
                 value="pending"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-6 py-4 font-medium text-slate-600"
+                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none px-6 py-4 font-medium text-slate-600"
               >
                 Pending
               </TabsTrigger>
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-6 py-4 font-medium text-slate-600"
+                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none px-6 py-4 font-medium text-slate-600"
               >
                 All
               </TabsTrigger>
@@ -331,7 +331,7 @@ export default function KYCPage() {
           <div className="py-4">
             {kycDetailLoading ? (
               <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               </div>
             ) : kycDetail?.data ? (
               <div className="space-y-6">

@@ -19,7 +19,7 @@ export default function HomePage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
     </div>
   );
 }

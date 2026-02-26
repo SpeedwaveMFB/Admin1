@@ -138,7 +138,7 @@ export default function UserDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
   }
@@ -214,7 +214,7 @@ export default function UserDetailPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      className="h-8 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                       onClick={() => setEditSpeedTag({ open: true, value: user.speedwaveId || '', loading: false })}
                     >
                       <Edit2 className="h-3 w-3 mr-1" />
@@ -242,9 +242,9 @@ export default function UserDetailPage() {
         </div>
 
         <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-sm border-none bg-gradient-to-br from-blue-600 to-violet-600 text-white">
+          <Card className="shadow-sm border-none bg-gradient-to-br from-purple-600 to-violet-600 text-white">
             <CardContent className="pt-6 pb-6">
-              <p className="text-blue-100 text-sm font-medium mb-1">
+              <p className="text-purple-100 text-sm font-medium mb-1">
                 Account Balance
               </p>
               <h3 className="text-4xl font-bold tracking-tight">
@@ -257,7 +257,7 @@ export default function UserDetailPage() {
             <Card className="shadow-sm border-slate-200">
               <CardHeader className="border-b border-slate-100 pb-3 pt-4">
                 <CardTitle className="text-[15px] font-semibold text-slate-800 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-blue-600" />
+                  <CreditCard className="w-4 h-4 text-purple-600" />
                   Virtual Account
                 </CardTitle>
               </CardHeader>
@@ -280,13 +280,13 @@ export default function UserDetailPage() {
             <TabsList className="w-full justify-start h-auto p-0 bg-transparent rounded-none">
               <TabsTrigger
                 value="transactions"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-6 py-4 font-medium text-slate-600 hover:text-slate-900"
+                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none px-6 py-4 font-medium text-slate-600 hover:text-slate-900"
               >
                 Recent Transactions
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none px-6 py-4 font-medium text-slate-600 hover:text-slate-900"
+                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 rounded-none px-6 py-4 font-medium text-slate-600 hover:text-slate-900"
               >
                 Activity
               </TabsTrigger>

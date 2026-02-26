@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
   const { data: transactionsData, isLoading: transactionsLoading } = useTransactions({
     page: 1,
-    limit: 1000, // Increase limit to ensure we get enough data for the week, ideally backend supports date filtering
+    limit: 100, // Reduced from 1000 to prevent backend 500 errors
     startDate: format(currentWeekStart, 'yyyy-MM-dd'),
     endDate: format(currentWeekEnd, 'yyyy-MM-dd'),
   });
@@ -98,7 +98,7 @@ export default function DashboardPage() {
   if (statsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-4" />
         <p className="text-slate-500 font-medium">Loading dashboard...</p>
       </div>
     );
@@ -269,7 +269,7 @@ export default function DashboardPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleResetToCurrent}
-                className="ml-1 h-8 px-2 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className="ml-1 h-8 px-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               >
                 Reset
               </Button>

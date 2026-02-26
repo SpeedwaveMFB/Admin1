@@ -25,7 +25,7 @@ export default function NotFound() {
         </p>
 
         <div className="flex gap-4 flex-wrap justify-center">
-          <Button asChild size="lg" className="px-8 h-12 rounded-xl text-base bg-blue-600 hover:bg-blue-700">
+          <Button asChild size="lg" className="px-8 h-12 rounded-xl text-base bg-purple-600 hover:bg-purple-700">
             <Link href="/dashboard">
               <Home className="mr-2 h-5 w-5" />
               Go to Dashboard

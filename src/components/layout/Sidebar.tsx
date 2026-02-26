@@ -57,7 +57,7 @@ export default function Sidebar() {
       style={{ width: DRAWER_WIDTH }}
     >
       <div className="flex items-center min-h-[80px] px-6">
-        <h1 className="text-xl font-extrabold text-blue-600 tracking-tight">
+        <h1 className="text-xl font-extrabold text-purple-600 tracking-tight">
           Speedwave
         </h1>
       </div>
@@ -72,7 +72,7 @@ export default function Sidebar() {
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   active
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20 hover:bg-purple-700'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 )}
               >
@@ -93,11 +93,11 @@ export default function Sidebar() {
                         className={cn(
                           'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                           subActive
-                            ? 'bg-blue-50 text-blue-700'
+                            ? 'bg-purple-50 text-purple-700'
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                         )}
                       >
-                        <div className={cn('flex-shrink-0', subActive ? 'text-blue-600' : 'text-slate-400')}>
+                        <div className={cn('flex-shrink-0', subActive ? 'text-purple-600' : 'text-slate-400')}>
                           {subItem.icon}
                         </div>
                         {subItem.title}

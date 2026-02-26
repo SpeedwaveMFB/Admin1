@@ -106,7 +106,7 @@ export default function BillsAirtimePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+          <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
             <Phone className="h-6 w-6" />
           </div>
           <div>
@@ -143,8 +143,8 @@ export default function BillsAirtimePage() {
           <StatsCard
             title="Total Airtime Txns"
             value={airtimeStats.totalCount}
-            icon={<Phone className="h-4 w-4 text-blue-600" />}
-            color="text-blue-600 bg-blue-50"
+            icon={<Phone className="h-4 w-4 text-purple-600" />}
+            color="text-purple-600 bg-purple-50"
           />
           <StatsCard
             title="Successful"
@@ -162,8 +162,8 @@ export default function BillsAirtimePage() {
             title="Total Amount"
             value={airtimeStats.totalAmount}
             format="currency"
-            icon={<Phone className="h-4 w-4 text-blue-600" />}
-            color="text-blue-600 bg-blue-50"
+            icon={<Phone className="h-4 w-4 text-purple-600" />}
+            color="text-purple-600 bg-purple-50"
           />
         </div>
       )}

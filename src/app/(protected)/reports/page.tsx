@@ -10,7 +10,7 @@ export default function ReportsPage() {
       title: 'Financial Reports',
       description: 'Transaction and revenue reports',
       icon: <Receipt className="w-6 h-6" />,
-      colorClass: 'bg-blue-50 text-blue-600',
+      colorClass: 'bg-purple-50 text-purple-600',
     },
     {
       title: 'User Reports',
@@ -45,7 +45,7 @@ export default function ReportsPage() {
 
       <Card className="shadow-sm border-slate-200">
         <CardContent className="pt-6">
-          <Alert className="bg-blue-50 text-blue-700 border-blue-200 mb-0">
+          <Alert className="bg-purple-50 text-purple-700 border-purple-200 mb-0">
             <AlertDescription>
               Report generation will be available once the backend endpoints are ready.
             </AlertDescription>

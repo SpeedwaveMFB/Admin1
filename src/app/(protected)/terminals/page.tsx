@@ -80,7 +80,7 @@ export default function TerminalsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center mt-12">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
   }
