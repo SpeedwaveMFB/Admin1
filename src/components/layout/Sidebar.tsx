@@ -20,17 +20,19 @@ import {
   Settings02Icon,
   Store01Icon
 } from 'hugeicons-react';
+import { useAuthStore } from '@/lib/store/authStore';
 
 const DRAWER_WIDTH = 260;
 
 const menuItems = [
-  { title: 'Dashboard', path: '/dashboard', icon: <DashboardSquare01Icon size={20} /> },
-  { title: 'Users', path: '/users', icon: <UserGroupIcon size={20} /> },
-  { title: 'Transactions', path: '/transactions', icon: <Invoice01Icon size={20} /> },
+  { title: 'Dashboard', path: '/dashboard', icon: <DashboardSquare01Icon size={20} />, roles: ['admin', 'customer_service'] },
+  { title: 'Users', path: '/users', icon: <UserGroupIcon size={20} />, roles: ['admin', 'customer_service'] },
+  { title: 'Transactions', path: '/transactions', icon: <Invoice01Icon size={20} />, roles: ['admin', 'customer_service'] },
   {
     title: 'Bill Payments',
     path: '/bills',
     icon: <SmartPhone01Icon size={20} />,
+    roles: ['admin', 'customer_service'],
     subItems: [
       { title: 'Airtime', path: '/bills/airtime', icon: <SmartPhone01Icon size={18} /> },
       { title: 'Data', path: '/bills/data', icon: <Wifi01Icon size={18} /> },
@@ -38,18 +40,24 @@ const menuItems = [
       { title: 'Cable TV', path: '/bills/cable', icon: <Tv01Icon size={18} /> },
     ],
   },
-  { title: 'KYC Verification', path: '/kyc', icon: <SecurityCheckIcon size={20} /> },
-  { title: 'Virtual Accounts', path: '/virtual-accounts', icon: <BankIcon size={20} /> },
-  { title: 'POS Terminals', path: '/terminals', icon: <Store01Icon size={20} /> },
-  { title: 'Beneficiaries', path: '/beneficiaries', icon: <UserMultiple02Icon size={20} /> },
-  { title: 'Reports', path: '/reports', icon: <Analytics01Icon size={20} /> },
-  { title: 'Audit Logs', path: '/audit-logs', icon: <File02Icon size={20} /> },
-  { title: 'Settings', path: '/settings', icon: <Settings02Icon size={20} /> },
+  { title: 'KYC Verification', path: '/kyc', icon: <SecurityCheckIcon size={20} />, roles: ['admin', 'customer_service'] },
+  { title: 'Virtual Accounts', path: '/virtual-accounts', icon: <BankIcon size={20} />, roles: ['admin'] },
+  { title: 'POS Terminals', path: '/terminals', icon: <Store01Icon size={20} />, roles: ['admin'] },
+  { title: 'Beneficiaries', path: '/beneficiaries', icon: <UserMultiple02Icon size={20} />, roles: ['admin'] },
+  { title: 'Reports', path: '/reports', icon: <Analytics01Icon size={20} />, roles: ['admin'] },
+  { title: 'Audit Logs', path: '/audit-logs', icon: <File02Icon size={20} />, roles: ['admin'] },
+  { title: 'Settings', path: '/settings', icon: <Settings02Icon size={20} />, roles: ['admin'] },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { admin } = useAuthStore();
+  const userRole = admin?.role || 'customer_service';
+
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(userRole)
+  );
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 

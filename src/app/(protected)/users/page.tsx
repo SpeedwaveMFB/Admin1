@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
-import { RefreshCcw, Eye } from 'lucide-react';
-import { useUsers, useUpdateUserStatus } from '@/lib/hooks/useUsers';
+import { RefreshCcw, Eye, UserPlus, Loader2 } from 'lucide-react';
+import { useUsers, useUpdateUserStatus, useCreateUser } from '@/lib/hooks/useUsers';
 import StatusBadge from '@/components/shared/StatusBadge';
 import ExportButton from '@/components/shared/ExportButton';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
@@ -23,6 +23,15 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -46,8 +55,22 @@ export default function UsersPage() {
     status: '',
   });
 
+  const [createUser, setCreateUser] = useState({
+    open: false,
+    loading: false,
+    data: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      bvn: '',
+      initialBalance: 0,
+    }
+  });
+
   const { data, isLoading, error, refetch } = useUsers(filters);
   const updateStatusMutation = useUpdateUserStatus();
+  const createUserMutation = useCreateUser();
 
   const handlePageChange = (updaterOrValue: any) => {
     setPagination(updaterOrValue);
@@ -168,6 +191,10 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button onClick={() => setCreateUser({ ...createUser, open: true })}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Create User
+          </Button>
           <Button variant="outline" size="icon" onClick={() => refetch()}>
             <RefreshCcw className="w-4 h-4 text-slate-600" />
           </Button>
@@ -263,6 +290,103 @@ export default function UsersPage() {
         onCancel={() => setConfirmDialog({ open: false, userId: '', action: '', status: '' })}
         severity={confirmDialog.action === 'Suspend' ? 'warning' : 'info'}
       />
+
+      <Dialog open={createUser.open} onOpenChange={(open) => !open && setCreateUser({ ...createUser, open: false })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Enter details to create a new user account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={createUser.data.firstName}
+                  onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, firstName: e.target.value } })}
+                  placeholder="John"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={createUser.data.lastName}
+                  onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, lastName: e.target.value } })}
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={createUser.data.email}
+                onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, email: e.target.value } })}
+                placeholder="john@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                value={createUser.data.phoneNumber}
+                onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, phoneNumber: e.target.value } })}
+                placeholder="08012345678"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bvn">BVN</Label>
+              <Input
+                id="bvn"
+                value={createUser.data.bvn}
+                onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, bvn: e.target.value } })}
+                placeholder="22233344455"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="initialBalance">Initial Balance (₦)</Label>
+              <Input
+                id="initialBalance"
+                type="number"
+                value={createUser.data.initialBalance}
+                onChange={(e) => setCreateUser({ ...createUser, data: { ...createUser.data, initialBalance: parseFloat(e.target.value) } })}
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateUser({ ...createUser, open: false })}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                setCreateUser(prev => ({ ...prev, loading: true }));
+                try {
+                  await createUserMutation.mutateAsync(createUser.data);
+                  setCreateUser(prev => ({ ...prev, open: false, loading: false }));
+                } catch (error) {
+                  setCreateUser(prev => ({ ...prev, loading: false }));
+                }
+              }}
+              disabled={createUser.loading || createUserMutation.isPending}
+            >
+              {(createUser.loading || createUserMutation.isPending) ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create User'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

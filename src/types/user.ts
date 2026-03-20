@@ -25,6 +25,9 @@ export interface UserDetail extends User {
   kycNotes?: string;
   kycVerifiedBy?: string | null;
   kycVerifiedAt?: string | null;
+
+  pnd?: boolean;
+  noCredit?: boolean;
 }
 
 export interface UserFilters {

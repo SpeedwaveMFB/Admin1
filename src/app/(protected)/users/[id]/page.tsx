@@ -2,14 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useUpdateUserStatus } from '@/lib/hooks/useUsers';
+import { useUser, useUpdateUserStatus, useUpdateUser, useTogglePnd, useToggleNoCredit } from '@/lib/hooks/useUsers';
 import { useTransactions } from '@/lib/hooks/useTransactions';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { ArrowLeft, Edit2, Loader2, CreditCard } from 'lucide-react';
+import { ArrowLeft, Edit2, Loader2, CreditCard, ShieldAlert, Ban, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -41,12 +41,27 @@ export default function UserDetailPage() {
   const { data: userData, isLoading, error } = useUser(userId);
   const { data: transactionsData, isLoading: transactionsLoading } = useTransactions({ userId, limit: 10 });
   const updateStatusMutation = useUpdateUserStatus();
+  const updateUserMutation = useUpdateUser();
+  const togglePndMutation = useTogglePnd();
+  const toggleNoCreditMutation = useToggleNoCredit();
   const queryClient = useQueryClient();
 
   const [editSpeedTag, setEditSpeedTag] = useState({
     open: false,
     value: '',
     loading: false,
+  });
+
+  const [editUser, setEditUser] = useState({
+    open: false,
+    loading: false,
+    data: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      balance: 0,
+    }
   });
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -72,6 +87,46 @@ export default function UserDetailPage() {
       await updateSpeedTagMutation.mutateAsync(editSpeedTag.value);
     } catch (error) {
       console.error('Failed to update speed tag:', error);
+    }
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditUser({
+      open: true,
+      loading: false,
+      data: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber || '',
+        balance: user.balance,
+      }
+    });
+  };
+
+  const submitEditUser = async () => {
+    setEditUser(prev => ({ ...prev, loading: true }));
+    try {
+      await updateUserMutation.mutateAsync({ id: userId, data: editUser.data });
+      setEditUser(prev => ({ ...prev, open: false, loading: false }));
+    } catch (error) {
+      setEditUser(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleTogglePnd = async () => {
+    try {
+      await togglePndMutation.mutateAsync(userId);
+    } catch (error) {
+      console.error('Failed to update PND status');
+    }
+  };
+
+  const handleToggleNoCredit = async (checked: boolean) => {
+    try {
+      await toggleNoCreditMutation.mutateAsync({ id: userId, status: checked });
+    } catch (error) {
+      console.error('Failed to update No Credit status');
     }
   };
 
@@ -105,7 +160,7 @@ export default function UserDetailPage() {
         header: 'Type',
         cell: ({ row }) => {
           const type = row.getValue('type') as string;
-          return <Badge variant="outline" className="capitalize">{type.replace('_', ' ')}</Badge>;
+          return <Badge variant="outline" className="capitalize">{type?.replace('_', ' ') || type || 'N/A'}</Badge>;
         },
       },
       {
@@ -181,6 +236,10 @@ export default function UserDetailPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={() => handleEditUser(user)}>
+            <Edit2 className="h-4 w-4 mr-2" />
+            Edit Profile
+          </Button>
           {user.accountStatus === 'active' ? (
             <Button variant="destructive" onClick={() => handleStatusChange('suspended')}>
               Suspend Account
@@ -194,7 +253,86 @@ export default function UserDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader className="pb-3 pt-4 border-b border-slate-100">
+              <CardTitle className="text-[15px] font-semibold text-slate-800 flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-purple-600" />
+                Account Flags
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Restrict account activities
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="pnd" className="text-sm font-medium">Post No Debit (PND)</Label>
+                  <p className="text-[10px] text-slate-500">Block all outgoing transactions</p>
+                </div>
+                <div className="flex items-center h-6">
+                  <input
+                    id="pnd"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
+                    checked={user.pnd}
+                    onChange={handleTogglePnd}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="no-credit" className="text-sm font-medium">Post No Credit (PNC)</Label>
+                  <p className="text-[10px] text-slate-500">Block all incoming deposits</p>
+                </div>
+                <div className="flex items-center h-6">
+                  <input
+                    id="no-credit"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
+                    checked={user.noCredit}
+                    onChange={(e) => handleToggleNoCredit(e.target.checked)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-none bg-gradient-to-br from-purple-600 to-violet-600 text-white">
+            <CardContent className="pt-6 pb-6">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-purple-100 text-sm font-medium">
+                  Account Balance
+                </p>
+                <Wallet className="h-4 w-4 text-purple-200" />
+              </div>
+              <h3 className="text-4xl font-bold tracking-tight">
+                {formatCurrency(user.balance)}
+              </h3>
+            </CardContent>
+          </Card>
+
+          {user.virtualAccount && (
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader className="border-b border-slate-100 pb-3 pt-4">
+                <CardTitle className="text-[15px] font-semibold text-slate-800 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-purple-600" />
+                  Virtual Account
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <p className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {user.virtualAccount.accountNumber}
+                </p>
+                <p className="text-sm text-slate-500 mt-1 font-medium">
+                  {user.virtualAccount.bankName}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-sm border-slate-200 h-full">
             <CardHeader className="border-b border-slate-100 pb-4">
               <CardTitle className="text-lg font-semibold text-slate-800">
@@ -373,6 +511,78 @@ export default function UserDetailPage() {
                 </>
               ) : (
                 'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editUser.open} onOpenChange={(open) => !open && setEditUser({ ...editUser, open: false })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <CardDescription>
+              Update user&apos;s sensitive information.
+            </CardDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={editUser.data.firstName}
+                  onChange={(e) => setEditUser({ ...editUser, data: { ...editUser.data, firstName: e.target.value } })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={editUser.data.lastName}
+                onChange={(e) => setEditUser({ ...editUser, data: { ...editUser.data, lastName: e.target.value } })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editUser.data.email}
+                onChange={(e) => setEditUser({ ...editUser, data: { ...editUser.data, email: e.target.value } })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                value={editUser.data.phoneNumber}
+                onChange={(e) => setEditUser({ ...editUser, data: { ...editUser.data, phoneNumber: e.target.value } })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="balance">Account Balance (₦)</Label>
+              <Input
+                id="balance"
+                type="number"
+                value={editUser.data.balance}
+                onChange={(e) => setEditUser({ ...editUser, data: { ...editUser.data, balance: parseFloat(e.target.value) } })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser({ ...editUser, open: false })}>
+              Cancel
+            </Button>
+            <Button onClick={submitEditUser} disabled={editUser.loading || updateUserMutation.isPending}>
+              {(editUser.loading || updateUserMutation.isPending) ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update User'
               )}
             </Button>
           </DialogFooter>

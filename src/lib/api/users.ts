@@ -108,6 +108,26 @@ export const usersApi = {
     });
     return response.data;
   },
+
+  createUser: async (data: any) => {
+    const response = await apiClient.post<ApiResponse>('/admin/users', data);
+    return response.data;
+  },
+
+  updateUser: async (id: string, data: any) => {
+    const response = await apiClient.put<ApiResponse>(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  togglePnd: async (id: string) => {
+    const response = await apiClient.put<ApiResponse>(`/admin/users/${id}/pnd`);
+    return response.data;
+  },
+
+  toggleNoCredit: async (id: string, status: boolean) => {
+    const response = await apiClient.put<ApiResponse>(`/admin/users/${id}/no-credit`, { status });
+    return response.data;
+  },
 };
 
 
