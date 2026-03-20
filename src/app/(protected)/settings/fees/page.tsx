@@ -36,23 +36,79 @@ export default function FeeManagementPage() {
     return str;
   };
 
+  const sanitizeFromAny = (value: any): string => {
+    if (typeof value === 'string') return sanitizeString(value);
+    if (value && typeof value === 'object') {
+      return sanitizeString(
+        value.type ??
+          value.key ??
+          value.code ??
+          value.name ??
+          value.value ??
+          value.id ??
+          value._id ??
+          value.slug ??
+          value.transactionType ??
+          value.transaction_type ??
+          value.serviceType ??
+          value.service_type ??
+          '',
+      );
+    }
+    return '';
+  };
+
   const getFeeTransactionTypeKey = (fee: any): string => {
-    const candidate = sanitizeString(fee?.type ?? fee?.transactionType ?? fee?.serviceType ?? fee?.key ?? '');
-    return candidate || 'Unknown';
+    const candidate = sanitizeString(
+      fee?.type ??
+        fee?.transactionType ??
+        fee?.transaction_type ??
+        fee?.serviceType ??
+        fee?.service_type ??
+        fee?.key ??
+        fee?.feeKey ??
+        fee?.fee_key ??
+        fee?.code ??
+        fee?.transaction ??
+        fee?.category ??
+        fee?.id ??
+        fee?._id ??
+        fee?.feeId ??
+        fee?.fee_id ??
+        fee?.slug ??
+        fee?.transactionType ??
+        fee?.transaction_type ??
+        '',
+    );
+
+    const nestedCandidate = sanitizeFromAny(
+      fee?.transactionType ?? fee?.transaction_type ?? fee?.serviceType ?? fee?.service_type,
+    );
+
+    const finalCandidate = candidate || nestedCandidate;
+    return finalCandidate || 'Unknown';
   };
 
   const getFeeDisplayName = (fee: any): string => {
+    const nestedName =
+      sanitizeFromAny(fee?.transactionName ?? fee?.transaction_type ?? fee?.transactionType) ||
+      sanitizeFromAny(fee?.serviceName ?? fee?.service_type ?? fee?.serviceType);
+
     const candidate = sanitizeString(
       fee?.name ??
         fee?.label ??
         fee?.feeName ??
         fee?.fee_name ??
-        fee?.serviceName ??
         fee?.transactionName ??
         fee?.transaction_name ??
+        fee?.transaction ??
+        fee?.transaction_type ??
+        fee?.serviceName ??
+        fee?.service_type ??
         fee?.title ??
         fee?.description ??
         getFeeTransactionTypeKey(fee) ??
+        nestedName ??
         'Fee',
     );
     return candidate || 'Fee';
@@ -100,7 +156,7 @@ export default function FeeManagementPage() {
     name: '',
     data: {
       feeType: 'flat' as 'flat' | 'percentage',
-      value: 0,
+      feeValue: 0,
     }
   });
 
@@ -114,7 +170,7 @@ export default function FeeManagementPage() {
       name: getFeeDisplayName(fee),
       data: {
         feeType: feeKind,
-        value: normalizeFeeValue(fee),
+        feeValue: normalizeFeeValue(fee),
       }
     });
   };
@@ -124,7 +180,10 @@ export default function FeeManagementPage() {
     try {
       await updateFeeMutation.mutateAsync({
         type: editFee.type,
-        data: editFee.data
+        data: {
+          feeType: editFee.data.feeType,
+          feeValue: editFee.data.feeValue,
+        },
       });
       setEditFee(prev => ({ ...prev, open: false, loading: false }));
     } catch (error) {
@@ -227,8 +286,8 @@ export default function FeeManagementPage() {
               <Label>Value</Label>
               <Input 
                 type="number" 
-                value={editFee.data.value} 
-                onChange={(e) => setEditFee({ ...editFee, data: { ...editFee.data, value: parseFloat(e.target.value) } })}
+                value={editFee.data.feeValue} 
+                onChange={(e) => setEditFee({ ...editFee, data: { ...editFee.data, feeValue: parseFloat(e.target.value) } })}
               />
             </div>
           </div>

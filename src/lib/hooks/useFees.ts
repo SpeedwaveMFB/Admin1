@@ -12,7 +12,7 @@ export function useUpdateFee() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ type, data }: { type: string; data: { feeType: 'flat' | 'percentage'; value: number } }) =>
+    mutationFn: ({ type, data }: { type: string; data: { feeType: 'flat' | 'percentage'; feeValue: number } }) =>
       feesApi.updateFee(type, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fees'] });
