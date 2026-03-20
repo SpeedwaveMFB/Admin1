@@ -130,7 +130,6 @@ export default function UserDetailPage() {
     }
   };
 
-  const user = userData?.data;
   const transactions = transactionsData?.data?.transactions || [];
 
   const handleStatusChange = (newStatus: string) => {
@@ -151,6 +150,46 @@ export default function UserDetailPage() {
     } catch (error) {
       console.error('Failed to update user status:', error);
     }
+  };
+
+  const normalizeUser = (u: any) => {
+    if (!u) return null;
+
+    const toFiniteNumber = (value: any): number => {
+      const n = typeof value === 'string' ? parseFloat(value) : value;
+      return Number.isFinite(n) ? (n as number) : 0;
+    };
+
+    const toBoolean = (value: any): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'number') return value === 1;
+      if (typeof value === 'string') return ['true', '1', 'yes', 'y'].includes(value.trim().toLowerCase());
+      return false;
+    };
+
+    const virtualAccount = u.virtualAccount ?? u.virtual_account;
+    const normalizedVirtualAccount = virtualAccount
+      ? {
+          accountNumber: virtualAccount.accountNumber ?? virtualAccount.account_number ?? '',
+          bankName: virtualAccount.bankName ?? virtualAccount.bank_name ?? '',
+          accountName: virtualAccount.accountName ?? virtualAccount.account_name ?? '',
+        }
+      : undefined;
+
+    return {
+      ...u,
+      firstName: u.firstName ?? u.first_name ?? '',
+      lastName: u.lastName ?? u.last_name ?? '',
+      phoneNumber: u.phoneNumber ?? u.phone_number ?? '',
+      speedwaveId: u.speedwaveId ?? u.speedwave_id ?? '',
+      accountStatus: u.accountStatus ?? u.account_status ?? '',
+      isVerified: toBoolean(u.isVerified ?? u.is_verified ?? false),
+      createdAt: u.createdAt ?? u.created_at ?? null,
+      pnd: toBoolean(u.pnd ?? u.PND ?? u.post_no_debit ?? u.postNoDebit),
+      noCredit: toBoolean(u.noCredit ?? u.no_credit ?? u.post_no_credit ?? u.postNoCredit),
+      balance: toFiniteNumber(u.balance ?? u.BALANCE ?? u.amount),
+      virtualAccount: normalizedVirtualAccount,
+    };
   };
 
   const transactionColumns = useMemo<ColumnDef<any>[]>(
@@ -198,6 +237,8 @@ export default function UserDetailPage() {
     );
   }
 
+  const user = normalizeUser(userData?.data);
+
   if (error || !user) {
     return (
       <div className="space-y-4">
@@ -218,6 +259,8 @@ export default function UserDetailPage() {
       <div className="font-semibold text-slate-900">{value || 'N/A'}</div>
     </div>
   );
+
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -275,7 +318,7 @@ export default function UserDetailPage() {
                     id="pnd"
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
-                    checked={user.pnd}
+                    checked={!!user.pnd}
                     onChange={handleTogglePnd}
                   />
                 </div>
@@ -290,7 +333,7 @@ export default function UserDetailPage() {
                     id="no-credit"
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
-                    checked={user.noCredit}
+                    checked={!!user.noCredit}
                     onChange={(e) => handleToggleNoCredit(e.target.checked)}
                   />
                 </div>
@@ -341,7 +384,7 @@ export default function UserDetailPage() {
             </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
-                {renderField('Name', `${user.firstName} ${user.lastName}`)}
+                {renderField('Name', fullName)}
                 {renderField('Email', user.email)}
                 {renderField('Phone Number', user.phoneNumber)}
 

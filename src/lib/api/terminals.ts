@@ -21,6 +21,24 @@ export const terminalsApi = {
     return response.data.data;
   },
 
+  rejectRequest: async (requestId: number) => {
+    const response = await api.post(`/terminals/reject/${requestId}`);
+    return response.data;
+  },
+
+  getAssignedTerminals: async (): Promise<TerminalRequest[]> => {
+    const response = await api.get('/terminals/assigned');
+    return response.data.data;
+  },
+
+  unmapTerminal: async (requestId: number, terminalSerialNumber: string, terminalLabel: string) => {
+    const response = await api.post(`/terminals/unmap/${requestId}`, {
+      terminal_serial_number: terminalSerialNumber,
+      terminal_label: terminalLabel,
+    });
+    return response.data;
+  },
+
   assignTerminal: async (requestId: number, serialNumber: string, terminalLabel?: string) => {
     const response = await api.post(`/terminals/assign/${requestId}`, {
       serialNumber,
