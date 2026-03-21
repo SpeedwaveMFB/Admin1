@@ -36,7 +36,16 @@ export const transactionsApi = {
     const response = await apiClient.get<ApiResponse<Transaction>>(
       `/admin/transactions/${id}`
     );
-    return response.data;
+    const payload: any = response.data;
+    const normalizedData =
+      payload?.data?.transaction ??
+      payload?.data?.transactions?.[0] ??
+      payload?.data;
+
+    return {
+      ...payload,
+      data: normalizedData,
+    };
   },
 
   getTransactionStats: async () => {

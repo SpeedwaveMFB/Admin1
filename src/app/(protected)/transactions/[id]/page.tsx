@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTransaction } from '@/lib/hooks/useTransactions';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
@@ -19,10 +20,54 @@ import {
 export default function TransactionDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const transactionId = params.id as string;
 
   const { data, isLoading, error } = useTransaction(transactionId);
-  const transaction = data?.data;
+  const cachedTransactionLists = queryClient.getQueriesData({ queryKey: ['transactions'] });
+  const cachedTransactions = cachedTransactionLists.flatMap(([, value]) => {
+    const items = (value as any)?.data?.transactions;
+    return Array.isArray(items) ? items : [];
+  });
+
+  const fallbackTransaction =
+    cachedTransactions.find((tx: any) => tx?.id === transactionId || tx?.reference === transactionId) || null;
+
+  const normalizeTransaction = (tx: any) => {
+    if (!tx) return null;
+    const amountRaw = tx.amount ?? tx.transaction_amount ?? tx.transactionAmount ?? 0;
+    const amountParsed = typeof amountRaw === 'string' ? parseFloat(amountRaw) : amountRaw;
+    const amount = Number.isFinite(amountParsed) ? amountParsed : 0;
+
+    return {
+      ...tx,
+      id: tx.id ?? tx.transaction_id ?? tx.transactionId ?? transactionId,
+      userId: tx.userId ?? tx.user_id ?? tx.customer_id ?? '',
+      userName: tx.userName ?? tx.user_name ?? tx.customer_name ?? tx.customerName,
+      userEmail: tx.userEmail ?? tx.user_email ?? tx.customer_email ?? tx.customerEmail,
+      type: tx.type ?? tx.transaction_type ?? tx.transactionType ?? '',
+      amount,
+      status: tx.status ?? tx.transaction_status ?? tx.transactionStatus ?? '',
+      reference: tx.reference ?? tx.transaction_reference ?? tx.transactionReference ?? '',
+      description: tx.description ?? tx.narration ?? '',
+      provider: tx.provider ?? tx.service_provider ?? tx.serviceProvider,
+      providerReference: tx.providerReference ?? tx.provider_reference,
+      recipientAccountNumber: tx.recipientAccountNumber ?? tx.recipient_account_number,
+      recipientAccountName: tx.recipientAccountName ?? tx.recipient_account_name,
+      recipientBankName: tx.recipientBankName ?? tx.recipient_bank_name,
+      transferFee: tx.transferFee ?? tx.transfer_fee,
+      serviceProvider: tx.serviceProvider ?? tx.service_provider,
+      serviceType: tx.serviceType ?? tx.service_type,
+      phoneNumber: tx.phoneNumber ?? tx.phone_number,
+      meterNumber: tx.meterNumber ?? tx.meter_number,
+      smartcardNumber: tx.smartcardNumber ?? tx.smartcard_number,
+      planName: tx.planName ?? tx.plan_name,
+      createdAt: tx.createdAt ?? tx.created_at,
+      metadata: tx.metadata ?? tx.meta ?? {},
+    };
+  };
+
+  const transaction = normalizeTransaction(data?.data) ?? normalizeTransaction(fallbackTransaction);
 
   if (isLoading) {
     return (
@@ -32,7 +77,7 @@ export default function TransactionDetailPage() {
     );
   }
 
-  if (error || !transaction) {
+  if ((error && !fallbackTransaction) || !transaction) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
