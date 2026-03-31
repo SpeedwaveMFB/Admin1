@@ -19,7 +19,7 @@ import TransactionChart from '@/components/dashboard/TransactionChart';
 import { useDashboardStats, useHealthStatus } from '@/lib/hooks/useDashboard';
 import { useTransactions } from '@/lib/hooks/useTransactions'; // New hook
 import { useMemo, useState } from 'react'; // For aggregation
-import { format, subDays, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek, addDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -42,9 +42,10 @@ export default function DashboardPage() {
 
   const { data: transactionsData, isLoading: transactionsLoading } = useTransactions({
     page: 1,
-    limit: 100, // Reduced from 1000 to prevent backend 500 errors
+    limit: 500,
     startDate: format(currentWeekStart, 'yyyy-MM-dd'),
-    endDate: format(currentWeekEnd, 'yyyy-MM-dd'),
+    // Add 1 day so the backend's `<= endDate` includes the full last day
+    endDate: format(addDays(currentWeekEnd, 1), 'yyyy-MM-dd'),
   });
 
   const chartData = useMemo(() => {
@@ -67,9 +68,14 @@ export default function DashboardPage() {
     });
 
     return daysInWeek.map(date => {
-      const dayTransactions = transactions.filter(t =>
-        t.createdAt && t.createdAt.startsWith(date) && t.status === 'completed'
-      );
+      const dayTransactions = transactions.filter(t => {
+        if (!t.createdAt || t.status !== 'completed') return false;
+        try {
+          return format(new Date(t.createdAt), 'yyyy-MM-dd') === date;
+        } catch {
+          return false;
+        }
+      });
 
       const deposits = dayTransactions
         .filter(t => t.type === 'deposit')
@@ -276,7 +282,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-        <TransactionChart data={chartData} />
+        <TransactionChart data={chartData} isLoading={transactionsLoading} />
       </div>
     </div>
   );

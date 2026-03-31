@@ -152,6 +152,42 @@ export default function TransactionDetailPage() {
                 </div>
               )}
 
+              {/* Internal Transfer Details */}
+              {transaction.type === 'transfer' && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                    Internal Transfer Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    {transaction.recipient ? (
+                      <>
+                        {renderField(
+                          'Counterpart Name',
+                          `${transaction.recipient.firstName ?? ''} ${transaction.recipient.lastName ?? ''}`.trim() || 'N/A'
+                        )}
+                        {renderField('Counterpart Email', transaction.recipient.email)}
+                        {renderField('Counterpart ID', transaction.recipient.id)}
+                      </>
+                    ) : (
+                      renderField('Counterpart', 'N/A')
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Withdrawal Details */}
+              {transaction.type === 'withdrawal' && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                    Withdrawal Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    {renderField('Narration', transaction.description || 'Withdrawal')}
+                    {renderField('Provider', transaction.provider || 'Internal')}
+                  </div>
+                </div>
+              )}
+
               {/* Bill Payment Details */}
               {['airtime', 'data', 'electricity', 'cable_tv'].includes(transaction.type) && (
                 <div className="mt-6 pt-6 border-t border-slate-100">

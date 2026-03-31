@@ -124,8 +124,13 @@ export const usersApi = {
     return response.data;
   },
 
-  toggleNoCredit: async (id: string, status: boolean) => {
-    const response = await apiClient.put<ApiResponse>(`/admin/users/${id}/no-credit`, { status });
+  toggleNoCredit: async (id: string) => {
+    const response = await apiClient.put<ApiResponse>(`/admin/users/${id}/no-credit`);
+    return response.data;
+  },
+
+  manualAdjust: async (id: string, data: { type: 'credit' | 'debit'; amount: number; reason: string }) => {
+    const response = await apiClient.post<ApiResponse>(`/admin/users/${id}/manual-adjust`, data);
     return response.data;
   },
 };

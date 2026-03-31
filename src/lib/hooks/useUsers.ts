@@ -120,10 +120,22 @@ export function useToggleNoCredit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: boolean }) =>
-      usersApi.toggleNoCredit(id, status),
+    mutationFn: (id: string) => usersApi.toggleNoCredit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+  });
+}
+
+export function useManualAdjust() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { type: 'credit' | 'debit'; amount: number; reason: string } }) =>
+      usersApi.manualAdjust(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['user', id] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
 }

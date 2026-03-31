@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useUpdateUserStatus, useUpdateUser, useTogglePnd, useToggleNoCredit } from '@/lib/hooks/useUsers';
+import { useUser, useUpdateUserStatus, useUpdateUser, useTogglePnd, useToggleNoCredit, useManualAdjust } from '@/lib/hooks/useUsers';
 import { useTransactions } from '@/lib/hooks/useTransactions';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDateTime } from '@/lib/utils/date';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { ArrowLeft, Edit2, Loader2, CreditCard, ShieldAlert, Ban, Wallet } from 'lucide-react';
+import { ArrowLeft, Edit2, Loader2, CreditCard, ShieldAlert, Ban, Wallet, PlusCircle, MinusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -44,6 +44,7 @@ export default function UserDetailPage() {
   const updateUserMutation = useUpdateUser();
   const togglePndMutation = useTogglePnd();
   const toggleNoCreditMutation = useToggleNoCredit();
+  const manualAdjustMutation = useManualAdjust();
   const queryClient = useQueryClient();
 
   const [editSpeedTag, setEditSpeedTag] = useState({
@@ -67,6 +68,14 @@ export default function UserDetailPage() {
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
+  });
+
+  const [manualAdjust, setManualAdjust] = useState({
+    open: false,
+    type: 'credit' as 'credit' | 'debit',
+    amount: '',
+    reason: '',
+    error: '',
   });
 
   const updateSpeedTagMutation = useMutation({
@@ -122,11 +131,33 @@ export default function UserDetailPage() {
     }
   };
 
-  const handleToggleNoCredit = async (checked: boolean) => {
+  const handleToggleNoCredit = async () => {
     try {
-      await toggleNoCreditMutation.mutateAsync({ id: userId, status: checked });
+      await toggleNoCreditMutation.mutateAsync(userId);
     } catch (error) {
       console.error('Failed to update No Credit status');
+    }
+  };
+
+  const submitManualAdjust = async () => {
+    const parsedAmount = parseFloat(manualAdjust.amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      setManualAdjust(prev => ({ ...prev, error: 'Enter a valid amount greater than 0' }));
+      return;
+    }
+    if (!manualAdjust.reason.trim()) {
+      setManualAdjust(prev => ({ ...prev, error: 'Reason is required' }));
+      return;
+    }
+    setManualAdjust(prev => ({ ...prev, error: '' }));
+    try {
+      await manualAdjustMutation.mutateAsync({
+        id: userId,
+        data: { type: manualAdjust.type, amount: parsedAmount, reason: manualAdjust.reason.trim() },
+      });
+      setManualAdjust({ open: false, type: 'credit', amount: '', reason: '', error: '' });
+    } catch (err: any) {
+      setManualAdjust(prev => ({ ...prev, error: err?.response?.data?.message || 'Failed to adjust balance' }));
     }
   };
 
@@ -334,7 +365,7 @@ export default function UserDetailPage() {
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
                     checked={!!user.noCredit}
-                    onChange={(e) => handleToggleNoCredit(e.target.checked)}
+                    onChange={handleToggleNoCredit}
                   />
                 </div>
               </div>
@@ -349,9 +380,25 @@ export default function UserDetailPage() {
                 </p>
                 <Wallet className="h-4 w-4 text-purple-200" />
               </div>
-              <h3 className="text-4xl font-bold tracking-tight">
+              <h3 className="text-4xl font-bold tracking-tight mb-4">
                 {formatCurrency(user.balance)}
               </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setManualAdjust({ open: true, type: 'credit', amount: '', reason: '', error: '' })}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium py-2 rounded-lg transition-colors"
+                >
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  Credit
+                </button>
+                <button
+                  onClick={() => setManualAdjust({ open: true, type: 'debit', amount: '', reason: '', error: '' })}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium py-2 rounded-lg transition-colors"
+                >
+                  <MinusCircle className="h-3.5 w-3.5" />
+                  Debit
+                </button>
+              </div>
             </CardContent>
           </Card>
 
@@ -422,37 +469,6 @@ export default function UserDetailPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-sm border-none bg-gradient-to-br from-purple-600 to-violet-600 text-white">
-            <CardContent className="pt-6 pb-6">
-              <p className="text-purple-100 text-sm font-medium mb-1">
-                Account Balance
-              </p>
-              <h3 className="text-4xl font-bold tracking-tight">
-                {formatCurrency(user.balance)}
-              </h3>
-            </CardContent>
-          </Card>
-
-          {user.virtualAccount && (
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader className="border-b border-slate-100 pb-3 pt-4">
-                <CardTitle className="text-[15px] font-semibold text-slate-800 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-purple-600" />
-                  Virtual Account
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-2xl font-bold text-slate-900 tracking-tight">
-                  {user.virtualAccount.accountNumber}
-                </p>
-                <p className="text-sm text-slate-500 mt-1 font-medium">
-                  {user.virtualAccount.bankName}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
       </div>
 
       <Card className="shadow-sm border-slate-200">
@@ -496,6 +512,76 @@ export default function UserDetailPage() {
           </CardContent>
         </Tabs>
       </Card>
+
+      <Dialog open={manualAdjust.open} onOpenChange={(open) => !open && setManualAdjust({ open: false, type: 'credit', amount: '', reason: '', error: '' })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {manualAdjust.type === 'credit'
+                ? <><PlusCircle className="h-5 w-5 text-emerald-600" /> Manual Credit</>
+                : <><MinusCircle className="h-5 w-5 text-red-600" /> Manual Debit</>
+              }
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex rounded-lg overflow-hidden border border-slate-200">
+              <button
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${manualAdjust.type === 'credit' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                onClick={() => setManualAdjust(prev => ({ ...prev, type: 'credit', error: '' }))}
+              >
+                Credit
+              </button>
+              <button
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${manualAdjust.type === 'debit' ? 'bg-red-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                onClick={() => setManualAdjust(prev => ({ ...prev, type: 'debit', error: '' }))}
+              >
+                Debit
+              </button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adjust-amount">Amount (₦)</Label>
+              <Input
+                id="adjust-amount"
+                type="number"
+                min="1"
+                placeholder="0.00"
+                value={manualAdjust.amount}
+                onChange={(e) => setManualAdjust(prev => ({ ...prev, amount: e.target.value, error: '' }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adjust-reason">Reason</Label>
+              <Input
+                id="adjust-reason"
+                placeholder="e.g. Refund, correction, bonus..."
+                value={manualAdjust.reason}
+                onChange={(e) => setManualAdjust(prev => ({ ...prev, reason: e.target.value, error: '' }))}
+              />
+            </div>
+            {manualAdjust.error && (
+              <Alert variant="destructive" className="py-2">
+                <AlertDescription className="text-xs">{manualAdjust.error}</AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualAdjust({ open: false, type: 'credit', amount: '', reason: '', error: '' })}>
+              Cancel
+            </Button>
+            <Button
+              className={manualAdjust.type === 'credit' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}
+              onClick={submitManualAdjust}
+              disabled={manualAdjustMutation.isPending}
+            >
+              {manualAdjustMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</>
+              ) : (
+                `Confirm ${manualAdjust.type === 'credit' ? 'Credit' : 'Debit'}`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ open: false, action: '', status: '' })}>
         <DialogContent>
