@@ -1,22 +1,27 @@
-import * as React from "react"
+'use client';
 
-import { cn } from "@/lib/utils"
+import * as React from 'react';
+import { Textarea as HeroTextarea, type TextAreaProps as HeroTextareaProps } from '@heroui/react';
+import { cn } from '@/lib/utils';
+import { herouiInputClassNames } from '@/lib/heroui-theme';
 
-const Textarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.ComponentProps<"textarea">
->(({ className, ...props }, ref) => {
-  return (
-    <textarea
-      className={cn(
-        "flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        className
-      )}
-      ref={ref}
-      {...props}
-    />
-  )
-})
-Textarea.displayName = "Textarea"
+export type TextareaProps = HeroTextareaProps;
 
-export { Textarea }
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { rows?: number }>(
+  ({ className, rows, minRows, ...props }, ref) => (
+  <HeroTextarea
+    ref={ref}
+    radius="lg"
+    variant="bordered"
+    minRows={minRows ?? rows ?? 3}
+    classNames={{
+      inputWrapper: herouiInputClassNames.inputWrapper,
+      input: cn('text-sm', herouiInputClassNames.input),
+    }}
+    className={cn('w-full', className)}
+    {...props}
+  />
+));
+Textarea.displayName = 'Textarea';
+
+export { Textarea };

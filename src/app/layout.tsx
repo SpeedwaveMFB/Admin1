@@ -1,6 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HeroUIProvider } from '@/components/providers/HeroUIProvider';
 import './globals.css';
 import { useState } from 'react';
 
@@ -28,7 +29,7 @@ export default function RootLayout({
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <HeroUIProvider>{children}</HeroUIProvider>
         </QueryClientProvider>
       </body>
     </html>

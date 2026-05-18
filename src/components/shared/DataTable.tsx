@@ -2,138 +2,145 @@
 
 import * as React from 'react';
 import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-    PaginationState,
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  PaginationState,
 } from '@tanstack/react-table';
-
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Pagination,
+  Skeleton,
+} from '@heroui/react';
+import { cn } from '@/lib/utils';
+import { adminTableClassNames, adminPaginationClassNames } from '@/lib/heroui-table';
+
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData, TValue> {
+    headerClassName?: string;
+    cellClassName?: string;
+    width?: string;
+  }
+}
 
 interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    data: TData[];
-    pageCount: number;
-    pagination: PaginationState;
-    onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
-    isLoading?: boolean;
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  pageCount: number;
+  pagination: PaginationState;
+  onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
+  isLoading?: boolean;
+  'aria-label'?: string;
 }
 
 export function DataTable<TData, TValue>({
-    columns,
-    data,
-    pageCount,
-    pagination,
-    onPaginationChange,
-    isLoading,
+  columns,
+  data,
+  pageCount,
+  pagination,
+  onPaginationChange,
+  isLoading,
+  'aria-label': ariaLabel = 'Data table',
 }: DataTableProps<TData, TValue>) {
-    const table = useReactTable({
-        data,
-        columns,
-        pageCount,
-        state: {
-            pagination,
-        },
-        onPaginationChange,
-        getCoreRowModel: getCoreRowModel(),
-        manualPagination: true,
-    });
+  const table = useReactTable({
+    data,
+    columns,
+    pageCount,
+    state: { pagination },
+    onPaginationChange,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+  });
 
-    return (
-        <div className="space-y-4">
-            <div className="rounded-md border bg-white overflow-hidden">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="bg-slate-50">
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id} className="font-semibold text-slate-600">
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            Array.from({ length: pagination.pageSize }).map((_, i) => (
-                                <TableRow key={i}>
-                                    {columns.map((_, j) => (
-                                        <TableCell key={j}>
-                                            <Skeleton className="h-4 w-full" />
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center text-slate-500"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+  const headerGroup = table.getHeaderGroups()[0];
+
+  return (
+    <div className="space-y-4 w-full max-w-full min-w-0">
+      <Table
+        aria-label={ariaLabel}
+        radius="lg"
+        shadow="sm"
+        isCompact
+        removeWrapper={false}
+        classNames={adminTableClassNames}
+      >
+        <TableHeader>
+          {headerGroup.headers.map((header) => {
+            const meta = header.column.columnDef.meta;
+            return (
+              <TableColumn
+                key={header.id}
+                className={cn(meta?.headerClassName)}
+                style={meta?.width ? { width: meta.width } : undefined}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableColumn>
+            );
+          })}
+        </TableHeader>
+        <TableBody
+          emptyContent={
+            <span className="text-default-500 text-sm">No results.</span>
+          }
+          isLoading={isLoading}
+          loadingContent={
+            <div className="flex flex-col gap-3 py-6 w-full px-4">
+              {Array.from({ length: Math.min(pagination.pageSize, 5) }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-full rounded-lg" />
+              ))}
             </div>
-            <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="text-sm text-muted-foreground">
-                    Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage() || isLoading}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage() || isLoading}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
+          }
+        >
+          {table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              className="hover:bg-default-50 transition-colors"
+            >
+              {row.getVisibleCells().map((cell) => {
+                const meta = cell.column.columnDef.meta;
+                return (
+                  <TableCell
+                    key={cell.id}
+                    className={cn(meta?.cellClassName)}
+                    style={meta?.width ? { width: meta.width } : undefined}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {pageCount > 1 ? (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
+          <p className="text-sm text-default-500 shrink-0">
+            Page {pagination.pageIndex + 1} of {Math.max(pageCount, 1)}
+          </p>
+          <Pagination
+            isCompact
+            showControls
+            radius="lg"
+            classNames={adminPaginationClassNames}
+            total={Math.max(pageCount, 1)}
+            page={pagination.pageIndex + 1}
+            isDisabled={isLoading}
+            onChange={(page) =>
+              onPaginationChange((prev) => ({ ...prev, pageIndex: page - 1 }))
+            }
+          />
         </div>
-    );
+      ) : null}
+    </div>
+  );
 }

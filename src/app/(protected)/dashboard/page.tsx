@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   UserGroupIcon,
   TradeUpIcon,
@@ -17,58 +18,48 @@ import {
 import StatsCard from '@/components/dashboard/StatsCard';
 import TransactionChart from '@/components/dashboard/TransactionChart';
 import { useDashboardStats, useHealthStatus } from '@/lib/hooks/useDashboard';
-import { useTransactions } from '@/lib/hooks/useTransactions'; // New hook
-import { useMemo, useState } from 'react'; // For aggregation
+import { useTransactions } from '@/lib/hooks/useTransactions';
+import { useMemo, useState } from 'react';
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek, addDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-
 export default function DashboardPage() {
   const { data: statsData, isLoading: statsLoading, error: statsError } = useDashboardStats();
   const { data: healthData, isLoading: healthLoading } = useHealthStatus();
-
   const [referenceDate, setReferenceDate] = useState(new Date());
 
-  const currentWeekStart = startOfWeek(referenceDate, { weekStartsOn: 1 }); // Monday
-  const currentWeekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 }); // Sunday
-
-  const handlePreviousWeek = () => setReferenceDate(prev => subWeeks(prev, 1));
-  const handleNextWeek = () => setReferenceDate(prev => addWeeks(prev, 1));
-  const handleResetToCurrent = () => setReferenceDate(new Date());
-
+  const currentWeekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
+  const currentWeekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
   const isCurrentWeek = isSameWeek(referenceDate, new Date(), { weekStartsOn: 1 });
 
   const { data: transactionsData, isLoading: transactionsLoading } = useTransactions({
     page: 1,
     limit: 500,
     startDate: format(currentWeekStart, 'yyyy-MM-dd'),
-    // Add 1 day so the backend's `<= endDate` includes the full last day
     endDate: format(addDays(currentWeekEnd, 1), 'yyyy-MM-dd'),
   });
 
   const chartData = useMemo(() => {
-    if (!transactionsData?.data?.transactions) return [
-      { date: 'Mon', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Tue', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Wed', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Thu', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Fri', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Sat', deposits: 0, withdrawals: 0, transfers: 0 },
-      { date: 'Sun', deposits: 0, withdrawals: 0, transfers: 0 },
-    ];
+    const emptyWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((date) => ({
+      date,
+      deposits: 0,
+      withdrawals: 0,
+      transfers: 0,
+    }));
+
+    if (!transactionsData?.data?.transactions) return emptyWeek;
 
     const transactions = transactionsData.data.transactions;
-
     const daysInWeek = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(currentWeekStart);
       d.setDate(d.getDate() + i);
       return format(d, 'yyyy-MM-dd');
     });
 
-    return daysInWeek.map(date => {
-      const dayTransactions = transactions.filter(t => {
+    return daysInWeek.map((date) => {
+      const dayTransactions = transactions.filter((t) => {
         if (!t.createdAt || t.status !== 'completed') return false;
         try {
           return format(new Date(t.createdAt), 'yyyy-MM-dd') === date;
@@ -77,212 +68,243 @@ export default function DashboardPage() {
         }
       });
 
-      const deposits = dayTransactions
-        .filter(t => t.type === 'deposit')
-        .reduce((sum, t) => sum + t.amount, 0);
-
-      const withdrawals = dayTransactions
-        .filter(t => t.type === 'withdrawal')
-        .reduce((sum, t) => sum + t.amount, 0);
-
-      const transfers = dayTransactions
-        .filter(t => t.type === 'transfer' || t.type === 'bank_transfer')
-        .reduce((sum, t) => sum + t.amount, 0);
-
       const dateObj = new Date(date);
-      const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-
       return {
-        date: dayName,
-        deposits,
-        withdrawals,
-        transfers
+        date: dateObj.toLocaleDateString('en-US', { weekday: 'short' }),
+        deposits: dayTransactions.filter((t) => t.type === 'deposit').reduce((s, t) => s + t.amount, 0),
+        withdrawals: dayTransactions.filter((t) => t.type === 'withdrawal').reduce((s, t) => s + t.amount, 0),
+        transfers: dayTransactions
+          .filter((t) => t.type === 'transfer' || t.type === 'bank_transfer')
+          .reduce((s, t) => s + t.amount, 0),
       };
     });
   }, [transactionsData, currentWeekStart]);
 
+  const handlePreviousWeek = () => setReferenceDate((p) => subWeeks(p, 1));
+
   if (statsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-4" />
-        <p className="text-slate-500 font-medium">Loading dashboard...</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
+        <p className="font-medium text-default-500">Loading dashboard…</p>
       </div>
     );
   }
 
   if (statsError) {
     return (
-      <div className="p-4">
-        <Alert variant="destructive" className="bg-red-50 text-red-700 border-red-200">
-          <AlertDescription>Failed to load dashboard data. Please try again.</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive" className="max-w-lg">
+        <AlertDescription>Failed to load dashboard data. Please try again.</AlertDescription>
+      </Alert>
     );
   }
 
   const stats = statsData?.data;
+  const totalTx = stats?.transactions.total || 0;
+  const completedTx = stats?.transactions.completed || 0;
+  const successRate = totalTx > 0 ? (completedTx / totalTx) * 100 : 0;
+  const totalVolume =
+    (stats?.financials.totalDeposits || 0) +
+    (stats?.financials.totalWithdrawals || 0) +
+    (stats?.financials.totalTransfers || 0);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="mx-auto max-w-[1400px] space-y-8 min-w-0">
+      {/* Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Dashboard
+          <p className="text-sm font-medium text-primary">Speedwave Admin</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Overview
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Real-time overview of your platform
+          <p className="mt-2 text-sm text-default-500">
+            {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!healthLoading && healthData?.data && (
             <Badge
               variant="outline"
-              className={healthData.data.status === 'ok' ? 'bg-green-100 text-green-800 border-transparent font-medium' : 'bg-red-100 text-red-800 border-transparent font-medium'}
+              className={
+                healthData.data.status === 'ok'
+                  ? 'border-transparent bg-success-100 text-success-800'
+                  : 'border-transparent bg-danger-100 text-danger-800'
+              }
             >
               System {healthData.data.status.toUpperCase()}
             </Badge>
           )}
+          <Button asChild variant="bordered" radius="lg" size="sm">
+            <Link href="/users">Users</Link>
+          </Button>
+          <Button asChild variant="flat" color="primary" radius="lg" size="sm">
+            <Link href="/transactions">Transactions</Link>
+          </Button>
         </div>
       </div>
 
-      {/* User Stats */}
-      <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          User Statistics
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Hero metrics */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <StatsCard
+          variant="hero"
+          tone="violet"
+          title="Platform volume"
+          value={totalVolume}
+          format="currency"
+          subtitle="Deposits + withdrawals + transfers"
+          icon={<Exchange01Icon size={22} />}
+        />
+        <StatsCard
+          variant="hero"
+          tone="emerald"
+          title="Active users"
+          value={stats?.users.active || 0}
+          format="number"
+          subtitle={`${stats?.users.total || 0} total registered`}
+          icon={<UserGroupIcon size={22} />}
+        />
+        <StatsCard
+          variant="hero"
+          tone="sky"
+          title="Success rate"
+          value={successRate}
+          format="percent"
+          subtitle={`${completedTx} of ${totalTx} transactions`}
+          icon={<CheckmarkCircle02Icon size={22} />}
+        />
+      </div>
+
+      {/* Chart + user snapshot */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="xl:col-span-2 space-y-4 min-w-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Activity</h2>
+            <div className="flex items-center gap-1 rounded-xl border border-default-200 bg-content1 p-1 shadow-sm">
+              <Button variant="light" size="sm" isIconOnly onPress={handlePreviousWeek}>
+                <ArrowLeft01Icon size={16} />
+              </Button>
+              <span className="flex items-center gap-2 px-2 text-xs font-medium text-default-600">
+                <Calendar03Icon size={14} />
+                {format(currentWeekStart, 'MMM d')} – {format(currentWeekEnd, 'MMM d')}
+              </span>
+              <Button
+                variant="light"
+                size="sm"
+                isIconOnly
+                isDisabled={isCurrentWeek}
+                onPress={() => setReferenceDate((p) => addWeeks(p, 1))}
+              >
+                <ArrowRight01Icon size={16} />
+              </Button>
+              {!isCurrentWeek && (
+                <Button
+                  variant="light"
+                  size="sm"
+                  className="text-primary"
+                  onPress={() => setReferenceDate(new Date())}
+                >
+                  Today
+                </Button>
+              )}
+            </div>
+          </div>
+          <TransactionChart data={chartData} isLoading={transactionsLoading} />
+        </div>
+
+        <div className="space-y-4 min-w-0">
+          <h2 className="text-lg font-semibold text-foreground">Users</h2>
           <StatsCard
-            title="Total Users"
-            value={stats?.users.total || 0}
-            subtitle={`${stats?.users.active || 0} active`}
-            icon={<UserGroupIcon />}
-            color="primary.main"
-          />
-          <StatsCard
-            title="Active Users"
-            value={stats?.users.active || 0}
-            icon={<CheckmarkCircle02Icon />}
-            color="success.main"
-          />
-          <StatsCard
-            title="Suspended Users"
-            value={stats?.users.suspended || 0}
-            icon={<UserBlock01Icon />}
-            color="error.main"
-          />
-          <StatsCard
-            title="Verified Users"
+            variant="mini"
+            tone="violet"
+            title="Verified"
             value={stats?.users.verified || 0}
-            icon={<UserCheck01Icon />}
-            color="info.main"
+            icon={<UserCheck01Icon size={18} />}
           />
+          <StatsCard
+            variant="mini"
+            tone="rose"
+            title="Suspended"
+            value={stats?.users.suspended || 0}
+            icon={<UserBlock01Icon size={18} />}
+          />
+          <StatsCard
+            variant="mini"
+            tone="emerald"
+            title="Active"
+            value={stats?.users.active || 0}
+            icon={<CheckmarkCircle02Icon size={18} />}
+          />
+          <div className="rounded-2xl border border-default-200 bg-default-50/80 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-default-500">Quick links</p>
+            <div className="mt-3 flex flex-col gap-2">
+              <Link href="/kyc" className="text-sm font-medium text-primary hover:underline">
+                Review KYC queue →
+              </Link>
+              <Link href="/terminals" className="text-sm font-medium text-primary hover:underline">
+                POS terminal requests →
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Financial Stats */}
+      {/* Financial row */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Financial Overview
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Financials</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatsCard
-            title="Total Deposits"
+            title="Deposits"
             value={stats?.financials.totalDeposits || 0}
-            icon={<TradeUpIcon />}
-            color="success.main"
             format="currency"
+            tone="emerald"
+            icon={<TradeUpIcon size={20} />}
           />
           <StatsCard
-            title="Total Withdrawals"
+            title="Withdrawals"
             value={stats?.financials.totalWithdrawals || 0}
-            icon={<TradeDownIcon />}
-            color="warning.main"
             format="currency"
+            tone="amber"
+            icon={<TradeDownIcon size={20} />}
           />
           <StatsCard
-            title="Total Transfers"
+            title="Transfers"
             value={stats?.financials.totalTransfers || 0}
-            icon={<Exchange01Icon />}
-            color="primary.main"
             format="currency"
+            tone="violet"
+            icon={<Exchange01Icon size={20} />}
           />
         </div>
       </div>
 
-      {/* Transaction Stats */}
+      {/* Transaction status */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Transaction Statistics
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Transactions</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatsCard
-            title="Total Transactions"
-            value={stats?.transactions.total || 0}
-            icon={<Exchange01Icon />}
-            color="primary.main"
+            title="Total"
+            value={totalTx}
+            tone="slate"
+            icon={<Exchange01Icon size={18} />}
           />
           <StatsCard
             title="Completed"
-            value={stats?.transactions.completed || 0}
-            icon={<CheckmarkCircle02Icon />}
-            color="success.main"
+            value={completedTx}
+            tone="emerald"
+            icon={<CheckmarkCircle02Icon size={18} />}
           />
           <StatsCard
             title="Pending"
             value={stats?.transactions.pending || 0}
-            icon={<HourglassIcon />}
-            color="warning.main"
+            tone="amber"
+            icon={<HourglassIcon size={18} />}
           />
           <StatsCard
             title="Failed"
             value={stats?.transactions.failed || 0}
-            icon={<Cancel01Icon />}
-            color="error.main"
+            tone="rose"
+            icon={<Cancel01Icon size={18} />}
           />
         </div>
-      </div>
-
-      {/* Transaction Chart */}
-      <div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-          <h2 className="text-lg font-semibold text-slate-800">
-            Transaction Overview
-          </h2>
-          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900" onClick={handlePreviousWeek}>
-              <ArrowLeft01Icon size={18} />
-            </Button>
-
-            <div className="flex items-center gap-2 px-2 text-slate-600">
-              <Calendar03Icon size={16} />
-              <span className="text-sm font-medium">
-                {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-              </span>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-slate-500 hover:text-slate-900 disabled:opacity-30"
-              onClick={handleNextWeek}
-              disabled={isCurrentWeek}
-            >
-              <ArrowRight01Icon size={18} />
-            </Button>
-
-            {!isCurrentWeek && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetToCurrent}
-                className="ml-1 h-8 px-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-              >
-                Reset
-              </Button>
-            )}
-          </div>
-        </div>
-        <TransactionChart data={chartData} isLoading={transactionsLoading} />
       </div>
     </div>
   );

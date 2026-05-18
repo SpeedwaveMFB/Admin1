@@ -113,6 +113,7 @@ export default function UsersPage() {
     {
       accessorKey: 'email',
       header: 'Email',
+      meta: { cellClassName: 'break-all line-clamp-2 max-w-[200px]' },
     },
     {
       accessorKey: 'balance',
@@ -144,9 +145,10 @@ export default function UsersPage() {
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
+      meta: { width: '132px', cellClassName: 'whitespace-nowrap' },
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"

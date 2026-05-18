@@ -118,6 +118,7 @@ export default function TransactionsPage() {
     {
       accessorKey: 'reference',
       header: 'Reference',
+      meta: { cellClassName: 'break-all line-clamp-2 font-mono text-xs max-w-[140px]' },
     },
     {
       accessorKey: 'provider',
