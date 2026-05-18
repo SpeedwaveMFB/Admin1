@@ -134,10 +134,10 @@ export default function DashboardPage() {
               System {healthData.data.status.toUpperCase()}
             </Badge>
           )}
-          <Button asChild variant="bordered" radius="lg" size="sm">
+          <Button asChild variant="outline" size="sm">
             <Link href="/users">Users</Link>
           </Button>
-          <Button asChild variant="flat" color="primary" radius="lg" size="sm">
+          <Button asChild size="sm">
             <Link href="/transactions">Transactions</Link>
           </Button>
         </div>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-foreground">Activity</h2>
             <div className="flex items-center gap-1 rounded-xl border border-default-200 bg-content1 p-1 shadow-sm">
-              <Button variant="light" size="sm" isIconOnly onPress={handlePreviousWeek}>
+              <Button variant="ghost" size="sm" isIconOnly onPress={handlePreviousWeek}>
                 <ArrowLeft01Icon size={16} />
               </Button>
               <span className="flex items-center gap-2 px-2 text-xs font-medium text-default-600">
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                 {format(currentWeekStart, 'MMM d')} – {format(currentWeekEnd, 'MMM d')}
               </span>
               <Button
-                variant="light"
+                variant="ghost"
                 size="sm"
                 isIconOnly
                 isDisabled={isCurrentWeek}
@@ -198,7 +198,7 @@ export default function DashboardPage() {
               </Button>
               {!isCurrentWeek && (
                 <Button
-                  variant="light"
+                  variant="ghost"
                   size="sm"
                   className="text-primary"
                   onPress={() => setReferenceDate(new Date())}

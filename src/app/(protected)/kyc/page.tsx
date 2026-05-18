@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { usePendingKyc, useAllKyc, useApproveKyc, useRejectKyc, useUserKyc } from '@/lib/hooks/useUsers';
 import StatusBadge from '@/components/shared/StatusBadge';
 import DocumentViewer from '@/components/kyc/DocumentViewer';
@@ -92,9 +92,12 @@ export default function KYCPage() {
     setRejectDialogOpen(false);
   };
 
-  const handleApprove = async (userId: string) => {
-    await approveKyc(userId);
-  };
+  const handleApprove = useCallback(
+    async (userId: string) => {
+      await approveKyc(userId);
+    },
+    [approveKyc]
+  );
 
   const columns = useMemo<ColumnDef<any>[]>(
     () => [

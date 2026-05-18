@@ -21,15 +21,6 @@ import {
 import { cn } from '@/lib/utils';
 import { adminTableClassNames, adminPaginationClassNames } from '@/lib/heroui-table';
 
-declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-    width?: string;
-  }
-}
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];

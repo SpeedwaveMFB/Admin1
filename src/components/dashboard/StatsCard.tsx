@@ -9,6 +9,8 @@ interface StatsCardProps {
   subtitle?: string;
   icon?: React.ReactNode;
   tone?: 'violet' | 'emerald' | 'amber' | 'rose' | 'slate' | 'sky';
+  /** Legacy bill pages — Tailwind classes for the icon container */
+  color?: string;
   format?: 'currency' | 'number' | 'text' | 'percent';
   variant?: StatsCardVariant;
   className?: string;
@@ -59,6 +61,7 @@ export default function StatsCard({
   subtitle,
   icon,
   tone = 'violet',
+  color,
   format = 'number',
   variant = 'metric',
   className,
@@ -107,7 +110,7 @@ export default function StatsCard({
           <p className="text-lg font-semibold text-foreground truncate">{formattedValue()}</p>
         </div>
         {icon && (
-          <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', t.soft)}>
+          <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', color || t.soft)}>
             {icon}
           </div>
         )}
@@ -131,7 +134,7 @@ export default function StatsCard({
           {subtitle && <p className="mt-1 text-sm text-default-500">{subtitle}</p>}
         </div>
         {icon && (
-          <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', t.soft)}>
+          <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', color || t.soft)}>
             {icon}
           </div>
         )}
