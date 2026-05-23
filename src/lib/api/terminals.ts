@@ -12,6 +12,8 @@ export interface TerminalRequest {
   status: 'pending' | 'assigned' | 'rejected';
   terminal_serial_number: string | null;
   terminal_label: string | null;
+  paylony_terminal_id: string | null;
+  device_name: string | null;
   created_at: string;
 }
 
@@ -39,11 +41,21 @@ export const terminalsApi = {
     return response.data;
   },
 
-  assignTerminal: async (requestId: number, serialNumber: string, terminalLabel?: string) => {
-    const response = await api.post(`/terminals/assign/${requestId}`, {
+  assignTerminal: async (
+    requestId: number,
+    serialNumber: string,
+    paylonyTerminalId: string,
+    options?: { terminalLabel?: string; deviceName?: string }
+  ) => {
+    const payload: Record<string, unknown> = {
       serialNumber,
-      terminalLabel,
-    });
+      paylonyTerminalId,
+      terminalLabel: options?.terminalLabel,
+    };
+    const deviceName = options?.deviceName?.trim();
+    if (deviceName) payload.deviceName = deviceName;
+
+    const response = await api.post(`/terminals/assign/${requestId}`, payload);
     return response.data;
   },
 };

@@ -32,6 +32,8 @@ export default function TerminalsPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<TerminalRequest | null>(null);
   const [serialNumber, setSerialNumber] = useState('');
+  const [paylonyTerminalId, setPaylonyTerminalId] = useState('');
+  const [deviceName, setDeviceName] = useState('MP35P');
   const [terminalLabel, setTerminalLabel] = useState('');
   const [assignError, setAssignError] = useState('');
 
@@ -51,8 +53,17 @@ export default function TerminalsPage() {
   });
 
   const assignMutation = useMutation({
-    mutationFn: (data: { requestId: number; serial: string; label: string }) =>
-      terminalsApi.assignTerminal(data.requestId, data.serial, data.label),
+    mutationFn: (data: {
+      requestId: number;
+      serial: string;
+      paylonyTid: string;
+      label: string;
+      deviceModel: string;
+    }) =>
+      terminalsApi.assignTerminal(data.requestId, data.serial, data.paylonyTid, {
+        terminalLabel: data.label,
+        deviceName: data.deviceModel.trim() || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['terminalRequests'] });
       queryClient.invalidateQueries({ queryKey: ['terminalAssigned'] });
@@ -92,6 +103,8 @@ export default function TerminalsPage() {
   const handleOpenAssignModal = (request: TerminalRequest) => {
     setSelectedRequest(request);
     setSerialNumber('');
+    setPaylonyTerminalId('');
+    setDeviceName('MP35P');
     setTerminalLabel(`${request.business_name} POS`);
     setAssignError('');
     setAssignModalOpen(true);
@@ -118,13 +131,21 @@ export default function TerminalsPage() {
 
   const handleAssignSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRequest || !serialNumber) return;
+    if (!selectedRequest || !serialNumber.trim()) return;
+
+    const tid = paylonyTerminalId.trim();
+    if (!tid) {
+      setAssignError('Paylony TID is required');
+      return;
+    }
 
     setAssignError('');
     assignMutation.mutate({
       requestId: selectedRequest.id,
-      serial: serialNumber,
+      serial: serialNumber.trim(),
+      paylonyTid: tid,
       label: terminalLabel,
+      deviceModel: deviceName,
     });
   };
 
@@ -153,7 +174,7 @@ export default function TerminalsPage() {
           POS Terminal Requests
         </h1>
         <p className="text-sm text-slate-500">
-          Manage and assign point-of-sale terminals
+          Assign Paylony POS terminals (TID, serial, device model)
         </p>
       </div>
 
@@ -166,7 +187,9 @@ export default function TerminalsPage() {
                 <TableHead className="py-4 text-slate-600 font-semibold">User</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold">Business Info</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold">Status</TableHead>
-                <TableHead className="py-4 text-slate-600 font-semibold">Assigned Serial / Label</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Serial / Label</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Paylony TID</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Device</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -230,6 +253,12 @@ export default function TerminalsPage() {
                       </span>
                     )}
                   </TableCell>
+                  <TableCell className="py-4 text-sm text-slate-600">
+                    {req.paylony_terminal_id ?? '—'}
+                  </TableCell>
+                  <TableCell className="py-4 text-sm text-slate-600">
+                    {req.device_name ?? '—'}
+                  </TableCell>
                   <TableCell className="py-4 text-right">
                     {req.status === 'pending' && (
                       <div className="flex justify-end gap-2">
@@ -251,7 +280,7 @@ export default function TerminalsPage() {
               ))}
               {pendingRequests.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                     No terminal requests found.
                   </TableCell>
                 </TableRow>
@@ -272,7 +301,7 @@ export default function TerminalsPage() {
           Assigned POS Terminals
         </h1>
         <p className="text-sm text-slate-500 mb-4">
-          Unmap an assigned terminal back to pending (clears serial/label)
+          Unmap clears Paylony TID, serial, label, and device — request returns to pending
         </p>
       </div>
 
@@ -284,20 +313,22 @@ export default function TerminalsPage() {
                 <TableHead className="py-4 text-slate-600 font-semibold">Date</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold">User</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold">Business Info</TableHead>
-                <TableHead className="py-4 text-slate-600 font-semibold">Assigned Serial / Label</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Serial / Label</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Paylony TID</TableHead>
+                <TableHead className="py-4 text-slate-600 font-semibold">Device</TableHead>
                 <TableHead className="py-4 text-slate-600 font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assignedLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center">
+                  <TableCell colSpan={7} className="py-8 text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : assignedError ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8">
+                  <TableCell colSpan={7} className="py-8">
                     <Alert variant="destructive">
                       <AlertDescription>Failed to load assigned terminals</AlertDescription>
                     </Alert>
@@ -327,6 +358,12 @@ export default function TerminalsPage() {
                         <span className="text-xs text-slate-500">({term.terminal_label})</span>
                       </div>
                     </TableCell>
+                    <TableCell className="py-4 text-sm text-slate-600 font-medium">
+                      {term.paylony_terminal_id ?? '—'}
+                    </TableCell>
+                    <TableCell className="py-4 text-sm text-slate-600">
+                      {term.device_name ?? '—'}
+                    </TableCell>
                     <TableCell className="py-4 text-right">
                       <Button
                         size="sm"
@@ -342,7 +379,7 @@ export default function TerminalsPage() {
               )}
               {!assignedLoading && !assignedError && (assignedTerminals?.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
                     No assigned terminals found.
                   </TableCell>
                 </TableRow>
@@ -366,7 +403,8 @@ export default function TerminalsPage() {
             <p className="text-sm text-slate-600">
               This will unmap terminal{' '}
               <strong className="text-slate-900">{selectedUnmapRequest?.terminal_serial_number}</strong> and clear
-              its label in Nomba, returning the request to <strong className="text-slate-900">pending</strong>.
+              its Paylony mapping (TID, device, label), returning the request to{' '}
+              <strong className="text-slate-900">pending</strong>.
             </p>
           </div>
           <DialogFooter>
@@ -398,7 +436,7 @@ export default function TerminalsPage() {
       </Dialog>
 
       <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[480px]">
           <form onSubmit={handleAssignSubmit}>
             <DialogHeader>
               <DialogTitle>Assign Terminal</DialogTitle>
@@ -415,17 +453,45 @@ export default function TerminalsPage() {
               </p>
 
               <div className="space-y-2">
-                <Label htmlFor="serialNumber">Terminal Serial Number *</Label>
+                <Label htmlFor="paylonyTerminalId">Paylony TID *</Label>
+                <Input
+                  id="paylonyTerminalId"
+                  required
+                  value={paylonyTerminalId}
+                  onChange={(e) => setPaylonyTerminalId(e.target.value)}
+                  placeholder="Paylony terminal ID"
+                />
+                <p className="text-xs text-slate-500">
+                  Required — must match the ID used for Paylony POS push payments
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="serialNumber">Terminal serial number *</Label>
                 <Input
                   id="serialNumber"
                   required
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
+                  placeholder="Physical device serial"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="terminalLabel">Terminal Label</Label>
+                <Label htmlFor="deviceName">Device model</Label>
+                <Input
+                  id="deviceName"
+                  value={deviceName}
+                  onChange={(e) => setDeviceName(e.target.value)}
+                  placeholder="MP35P"
+                />
+                <p className="text-xs text-slate-500">
+                  Paylony device name (server defaults to MP35P if omitted)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="terminalLabel">Terminal label</Label>
                 <Input
                   id="terminalLabel"
                   value={terminalLabel}
@@ -433,7 +499,7 @@ export default function TerminalsPage() {
                   placeholder="e.g. Speedwave POS 1"
                 />
                 <p className="text-xs text-slate-500">
-                  A friendly name for this terminal in Nomba
+                  Display name for this terminal assignment
                 </p>
               </div>
             </div>
@@ -441,7 +507,10 @@ export default function TerminalsPage() {
               <Button type="button" variant="outline" onClick={handleCloseModal} disabled={assignMutation.isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={!serialNumber || assignMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={!serialNumber.trim() || !paylonyTerminalId.trim() || assignMutation.isPending}
+              >
                 {assignMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
